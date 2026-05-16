@@ -49,8 +49,8 @@ class TensonKorinConfig:
     pruning_ratio: float = 0.0           # プルーニング率（0.0 = 無し）
     pruning_method: str = "magnitude"    # "magnitude" or "structured"
     protected_modules: List[str] = field(default_factory=lambda: [
-        "intent_router", "confidence", "kotoyosashi",
-        "type_head", "error_head",
+        "confidence",
+        # 実装後に "type_head", "hiruko_detector" を追加する
     ])
 
     # 八咫鏡: キャリブレーション設定
@@ -709,7 +709,7 @@ class TensonKorinQuantizer:
 
         # BitsAndBytes 4bit (シンプル)
         model, tokenizer = quantizer.descend_bnb(
-            model_name="llm-jp/llm-jp-4-8b-base",
+            model_name="Qwen/Qwen2.5-Coder-7B-Instruct",
             output_path="checkpoints/yamato_final_4bit/",
         )
 

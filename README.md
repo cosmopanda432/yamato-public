@@ -1,6 +1,6 @@
 # yamatoLLM
 
-Type-aware TypeScript code generation, built on top of **Qwen3-Coder-8B**.
+Type-aware TypeScript code generation, built on top of **Qwen2.5-Coder-7B**.
 
 ## Motivation
 
@@ -14,7 +14,7 @@ yamatoLLM integrates **type prediction** directly into generation, with a **malf
 
 ## Architecture
 
-Three components added on top of a frozen Qwen3-Coder-8B backbone:
+Three components added on top of a frozen Qwen2.5-Coder-7B backbone:
 
 | Component | Role |
 |-----------|------|
@@ -26,7 +26,7 @@ Names are taken from Kojiki mythology. See [docs/ROADMAP.md](docs/ROADMAP.md) fo
 
 ## Status
 
-Work in progress. The goal is not to beat the absolute SOTA but to show a **measurable, reproducible improvement over the Qwen3-Coder-8B baseline** on type-correctness metrics.
+Work in progress. The goal is not to beat the absolute SOTA but to show a **measurable, reproducible improvement over the Qwen2.5-Coder-7B baseline** on type-correctness metrics.
 
 Target evaluations:
 
@@ -45,4 +45,4 @@ Inference fits in RTX 3060 12GB at INT4 via the included quantization pipeline.
 
 ## License
 
-Apache 2.0 (inherits from the Qwen3-Coder base).
+Apache 2.0 (inherits from the Qwen2.5-Coder base).

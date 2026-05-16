@@ -1,9 +1,9 @@
 """
 yamatoLLM 統合設定
 
-3層 + Qwen backbone の全設定を統合管理する。
-各層の個別設定（KojikiConfig, KenpouConfig）をまとめ、
-llm-jp-4-8b 固有のパラメータを追加する。
+Qwen2.5-Coder-7B-Instruct backbone に、TypeScript 型予測のカスタムヘッド
+（TsukuyomiTypeHead, HirukoDetector, BonpuConfidence など）を載せる
+構成の設定を統合管理する。
 """
 
 from dataclasses import dataclass, field
@@ -13,22 +13,21 @@ from typing import List, Optional
 @dataclass
 class QwenBackboneConfig:
     """
-    Backbone のアーキテクチャパラメータ（llm-jp-4-8b-base）
+    Backbone のアーキテクチャパラメータ（Qwen2.5-Coder-7B-Instruct）
 
-    HuggingFace llm-jp/llm-jp-4-8b-base の config.json に対応する。
-    アーキテクチャは LlamaForCausalLM（標準 Llama / GQA / SwiGLU）。
-
-    クラス名は履歴経緯で "Qwen" を含むが、現在のデフォルトは LLM-jp-4。
+    HuggingFace Qwen/Qwen2.5-Coder-7B-Instruct の config.json に対応する。
+    Architecture: Qwen2ForCausalLM（GQA / SwiGLU）。
     """
-    model_name: str = "llm-jp/llm-jp-4-8b-base"
-    hidden_size: int = 4096
-    num_layers: int = 32
-    num_attention_heads: int = 32
-    num_kv_heads: int = 8          # GQA
-    intermediate_size: int = 14336  # SwiGLU (silu)
-    vocab_size: int = 196608
-    rope_theta: float = 500000.0
-    max_position_embeddings: int = 65536
+    model_name: str = "Qwen/Qwen2.5-Coder-7B-Instruct"
+    local_path: Optional[str] = "models/Qwen2.5-Coder-7B-Instruct"
+    hidden_size: int = 3584
+    num_layers: int = 28
+    num_attention_heads: int = 28
+    num_kv_heads: int = 4              # GQA
+    intermediate_size: int = 18944     # SwiGLU (silu)
+    vocab_size: int = 152064
+    rope_theta: float = 1000000.0
+    max_position_embeddings: int = 32768
 
 
 @dataclass
@@ -36,7 +35,7 @@ class LoRAConfig:
     """
     LoRA アダプタ設定
 
-    学習ステージごとに調整可能。
+    backbone (Qwen2) は LoRA で適応、追加カスタムヘッドはフル学習。
     """
     r: int = 32
     lora_alpha: int = 64
@@ -45,87 +44,49 @@ class LoRAConfig:
         "q_proj", "v_proj", "gate_proj",
     ])
     modules_to_save: List[str] = field(default_factory=lambda: [
-        "intent_router",
-        "type_head",
-        "error_head",
         "confidence",
-        "kotoyosashi",
+        # 実装後に "type_head", "hiruko_detector" を追加する
     ])
 
 
 @dataclass
-class IwatoConfig:
+class TypeHeadConfig:
     """
-    言語処理層（岩戸隠れ）の設定
+    TsukuyomiTypeHead（per-token TypeScript 型予測ヘッド）設定
+
+    実装は後続フェーズ。ここでは語彙サイズと損失重みのみ宣言。
     """
-    # 思兼神（意図分類）
-    num_routes: int = 3                # chat / codegen / retrieval
-    route_names: List[str] = field(default_factory=lambda: [
-        "chat", "codegen", "retrieval",
-    ])
-
-    # 布刀玉命（RAG）
-    retriever_top_k: int = 5           # RAG 検索上位件数
-    cross_attention_heads: int = 4     # Cross-Attention ヘッド数
-
-    # 天宇受売命（生成）
-    manyo_filter_enabled: bool = True  # 万葉フィルタ（トーン制御）
-
-    # 天手力男神（出力確定）
-    shimenawa_max_tokens: int = 2048   # 注連縄: 最大出力トークン数
-    shimenawa_repeat_penalty: float = 1.2  # 繰り返しペナルティ
-
-    # 忌部（入出力浄化）
-    safety_threshold: float = 0.7      # 安全性スコア閾値
+    vocab_path: str = "config/ts_type_vocab.json"
+    vocab_size: int = 256              # 200-400 想定、暫定値
+    loss_weight: float = 0.3           # SFT 損失に加算する重み
+    hidden_dim: int = 512              # 中間層次元
 
 
 @dataclass
 class InferenceConfig:
-    """
-    推論設定（RTX 3060 対応）
-    """
+    """推論設定（RTX 3060 12GB で INT4 ロードを想定）"""
     quantize: Optional[str] = "4bit"   # None / "4bit" / "8bit"
     max_new_tokens: int = 1024
-    temperature: float = 0.7
-    top_p: float = 0.9
+    temperature: float = 0.3           # コード生成向けに低め
+    top_p: float = 0.95
     do_sample: bool = True
-    # 天の御柱プロトコル
-    enable_staged_generation: bool = True
-    repair_budget: int = 4             # Self-Repair 最大リトライ
 
 
 @dataclass
 class YamatoConfig:
-    """
-    yamatoLLM 統合設定
-
-    全層の設定を1つにまとめるエントリポイント。
-    """
-    # Qwen backbone
+    """yamatoLLM 統合設定エントリポイント"""
     backbone: QwenBackboneConfig = field(default_factory=QwenBackboneConfig)
-
-    # LoRA
     lora: LoRAConfig = field(default_factory=LoRAConfig)
-
-    # 言語処理層
-    iwato: IwatoConfig = field(default_factory=IwatoConfig)
-
-    # 推論
+    type_head: TypeHeadConfig = field(default_factory=TypeHeadConfig)
     inference: InferenceConfig = field(default_factory=InferenceConfig)
 
-    # 4軸評価 Quality Gate
-    v_threshold: float = 0.7           # COMMIT 閾値
-    stability_floor: float = 0.3       # stability 最低ライン
-    safety_floor: float = 0.5          # boundary 最低ライン
-
-    # 学習ステージ名
-    stage: str = "kuniyuzuri"          # 現在のステージ
+    # ステージ名: baseline / sft / dpo
+    stage: str = "baseline"
 
     @property
     def d_model(self) -> int:
-        """Qwen の hidden_size を返す（各層で共通）"""
+        """backbone の hidden_size を返す（カスタムヘッドで共通利用）"""
         return self.backbone.hidden_size
 
 
-# デフォルト設定インスタンス
 DEFAULT_YAMATO_CONFIG = YamatoConfig()
