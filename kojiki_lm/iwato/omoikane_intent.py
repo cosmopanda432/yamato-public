@@ -115,7 +115,7 @@ class OmoikaneIntentRouter(nn.Module):
             return hidden_states.mean(dim=1)
 
         # マスクを拡張して d_model 次元に適用
-        mask = attention_mask.unsqueeze(-1).float()  # [batch, seq_len, 1]
+        mask = attention_mask.unsqueeze(-1).to(hidden_states.dtype)  # [batch, seq_len, 1]
         masked_hidden = hidden_states * mask
         sum_hidden = masked_hidden.sum(dim=1)          # [batch, d_model]
         count = mask.sum(dim=1).clamp(min=1.0)         # [batch, 1]

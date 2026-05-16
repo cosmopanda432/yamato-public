@@ -10,3 +10,7 @@ outputs/
 wandb/
 .env
 *.log
+models/
+external/
+results/
+.claude/

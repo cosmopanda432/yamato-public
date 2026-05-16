@@ -50,7 +50,7 @@ class TensonKorinConfig:
     pruning_method: str = "magnitude"    # "magnitude" or "structured"
     protected_modules: List[str] = field(default_factory=lambda: [
         "intent_router", "confidence", "kotoyosashi",
-        "type_head", "error_head", "lm_head",
+        "type_head", "error_head",
     ])
 
     # 八咫鏡: キャリブレーション設定

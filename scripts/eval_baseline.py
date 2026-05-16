@@ -115,47 +115,117 @@ def check_prerequisites(eval_path: Path) -> None:
         )
 
 
-def build_eval_config(args: argparse.Namespace, output_dir: Path) -> Path:
-    """llm-jp-eval の config ファイルを生成"""
-    quantize = None if args.quantize == "none" else args.quantize
+def build_eval_config(args: argparse.Namespace, eval_path: Path, output_dir: Path) -> Path:
+    """llm-jp-eval v1.4.x 形式の YAML config を生成し、モデル/トークナイザー sub-config も書き出す"""
+    import yaml
 
-    config = {
-        "model": {
-            "pretrained_model_name_or_path": args.model_name,
-            "trust_remote_code": True,
-            "device_map": "auto",
-        },
-        "tokenizer": {
-            "pretrained_model_name_or_path": args.model_name,
-            "trust_remote_code": True,
-        },
+    quantize = None if args.quantize == "none" else args.quantize
+    model_name = str(Path(args.model_name).resolve())
+
+    # モデル sub-config
+    model_cfg: dict = {
+        "_target_": "transformers.AutoModelForCausalLM.from_pretrained",
+        "pretrained_model_name_or_path": model_name,
+        "trust_remote_code": True,
+        "device_map": "auto",
+        "load_in_4bit": quantize == "4bit",
+        "load_in_8bit": quantize == "8bit",
+    }
+
+    # トークナイザー sub-config
+    tokenizer_cfg: dict = {
+        "_target_": "transformers.AutoTokenizer.from_pretrained",
+        "pretrained_model_name_or_path": model_name,
+        "trust_remote_code": True,
+    }
+
+    # sub-config を output_dir 内の model/, tokenizer/ サブディレクトリに書き出す
+    # （Hydra は --config-path=output_dir でここを探す）
+    model_cfg_dir = output_dir / "model"
+    tokenizer_cfg_dir = output_dir / "tokenizer"
+    model_cfg_dir.mkdir(parents=True, exist_ok=True)
+    tokenizer_cfg_dir.mkdir(parents=True, exist_ok=True)
+
+    (model_cfg_dir / "yamato_local.yaml").write_text(
+        yaml.dump(model_cfg, allow_unicode=True), encoding="utf-8"
+    )
+    (tokenizer_cfg_dir / "yamato_local.yaml").write_text(
+        yaml.dump(tokenizer_cfg, allow_unicode=True), encoding="utf-8"
+    )
+
+    # メイン config
+    # preprocess_dataset.py はバージョン付きサブディレクトリに保存する
+    # evaluation/dev/ 直下に JSON があるバージョンを探す
+    _dataset_root = eval_path / "dataset"
+    _versions = sorted(
+        [d for d in _dataset_root.glob("*") if d.name[0].isdigit()],
+        key=lambda d: [int(x) for x in d.name.split(".")],
+    ) if _dataset_root.exists() else []
+    if _versions and (_versions[-1] / "evaluation" / "dev").exists():
+        dataset_dir = str((_versions[-1] / "evaluation" / "dev").resolve())
+    else:
+        dataset_dir = str(_dataset_root.resolve())
+    log_dir = str((output_dir / "logs").resolve())
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    main_cfg = {
+        "defaults": [
+            {"model": "yamato_local"},
+            {"tokenizer": "yamato_local"},
+            "_self_",
+        ],
+        "openapi": False,
+        "max_seq_length": 2048,
+        "dataset_dir": dataset_dir,
+        "strict": False,
         "target_dataset": args.target_datasets,
-        "log_dir": str(output_dir / "logs"),
+        "log_dir": log_dir,
+        "torch_dtype": "bf16",
+        "custom_prompt_template": None,
+        "custom_fewshots_template": None,
+        "default_answer_extract_pattern": "(?s)^(.*?)(?=\\n\\n|\\Z)",
+        "output_length_delta": 0,
+        "resource_dir": None,
+        "prompt_dump_dir": None,
+        "offline_dir": None,
+        "wandb": {
+            "launch": False,
+            "log": False,
+            "entity": "",
+            "project": "yamato-eval",
+            "run_name": None,
+        },
         "metainfo": {
             "version": "phase1-baseline",
-            "model_name": args.model_name,
-            "quantize": quantize or "fp16",
-            "basemodel_name": args.model_name,
+            "basemodel_name": model_name,
             "model_type": "llama",
             "instruction_tuning_method_by_llm_jp": "None",
             "instruction_tuning_data_by_llm_jp": [],
+            "data_type": "dev",
+            "num_few_shots": 4,
+            "max_num_samples": args.max_num_samples,
         },
-        "max_num_samples": args.max_num_samples,
-        "torch_dtype": "bf16",
-        "wandb": {
-            "log": False,
+        "pipeline_kwargs": {
+            "add_special_tokens": False,
+            "prefix": "",
+        },
+        "generator_kwargs": {
+            "do_sample": False,
+            "top_p": 1.0,
+            "repetition_penalty": 1.0,
+        },
+        "hydra": {
+            "job": {
+                "env_set": {
+                    "TOKENIZERS_PARALLELISM": "false",
+                },
+            },
         },
     }
 
-    if quantize == "4bit":
-        config["model"]["load_in_4bit"] = True
-    elif quantize == "8bit":
-        config["model"]["load_in_8bit"] = True
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    config_path = output_dir / "eval_config.json"
+    config_path = output_dir / "eval_config.yaml"
     config_path.write_text(
-        json.dumps(config, indent=2, ensure_ascii=False),
+        yaml.dump(main_cfg, allow_unicode=True, default_flow_style=False),
         encoding="utf-8",
     )
     logging.info("評価設定を生成: %s", config_path)
@@ -163,10 +233,12 @@ def build_eval_config(args: argparse.Namespace, output_dir: Path) -> Path:
 
 
 def run_eval(eval_path: Path, config_path: Path) -> int:
-    """llm-jp-eval をサブプロセスで実行"""
+    """llm-jp-eval v1.4.x (Hydra) をサブプロセスで実行"""
+    eval_path = eval_path.resolve()
+    config_path = config_path.resolve()
+
     eval_script = eval_path / "scripts" / "evaluate_llm.py"
     if not eval_script.exists():
-        # 新しい llm-jp-eval だとパスが異なる可能性 — フォールバック
         candidates = list(eval_path.rglob("evaluate_llm.py"))
         if candidates:
             eval_script = candidates[0]
@@ -175,11 +247,12 @@ def run_eval(eval_path: Path, config_path: Path) -> int:
                 f"evaluate_llm.py が見つかりません ({eval_path} 配下を探索)"
             )
 
+    # Hydra は --config-path / --config-name で設定ファイルを指定する
     cmd = [
         sys.executable,
         str(eval_script),
-        "-cn",
-        str(config_path),
+        f"--config-path={config_path.parent}",
+        f"--config-name={config_path.stem}",
     ]
     logging.info("実行: %s", " ".join(cmd))
 
@@ -239,7 +312,7 @@ def main() -> int:
         eval_path = Path(args.llm_jp_eval_path)
         check_prerequisites(eval_path)
 
-        config_path = build_eval_config(args, output_dir)
+        config_path = build_eval_config(args, eval_path, output_dir)
 
         if args.dry_run:
             logging.info("--dry-run: 評価は実行しません")
