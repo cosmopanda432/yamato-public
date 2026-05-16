@@ -222,8 +222,8 @@ class YamatoLLM(nn.Module):
 
             if confidence_labels is not None:
                 conf_loss = F.mse_loss(
-                    conf_out["confidence"],
-                    confidence_labels,
+                    conf_out["confidence"].squeeze(-1),  # [batch,1] → [batch]
+                    confidence_labels.to(conf_out["confidence"].dtype),
                 )
                 loss = loss + 0.3 * conf_loss
                 result["confidence_loss"] = conf_loss
