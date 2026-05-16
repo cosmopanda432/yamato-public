@@ -3,7 +3,7 @@ yamatoLLM 統合設定
 
 3層 + Qwen backbone の全設定を統合管理する。
 各層の個別設定（KojikiConfig, KenpouConfig）をまとめ、
-Qwen3.5-9B 固有のパラメータを追加する。
+llm-jp-4-8b 固有のパラメータを追加する。
 """
 
 from dataclasses import dataclass, field
@@ -13,19 +13,22 @@ from typing import List, Optional
 @dataclass
 class QwenBackboneConfig:
     """
-    Qwen3.5-9B のアーキテクチャパラメータ
+    Backbone のアーキテクチャパラメータ（llm-jp-4-8b-base）
 
-    これらは Qwen のモデル仕様に固定され、変更不可。
+    HuggingFace llm-jp/llm-jp-4-8b-base の config.json に対応する。
+    アーキテクチャは LlamaForCausalLM（標準 Llama / GQA / SwiGLU）。
+
+    クラス名は履歴経緯で "Qwen" を含むが、現在のデフォルトは LLM-jp-4。
     """
-    model_name: str = "Qwen/Qwen3.5-9B"
-    hidden_size: int = 3584
-    num_layers: int = 40
-    num_attention_heads: int = 28
-    num_kv_heads: int = 4          # GQA
-    intermediate_size: int = 18944  # SwiGLU
-    vocab_size: int = 151936
-    rope_theta: float = 1000000.0
-    max_position_embeddings: int = 32768
+    model_name: str = "llm-jp/llm-jp-4-8b-base"
+    hidden_size: int = 4096
+    num_layers: int = 32
+    num_attention_heads: int = 32
+    num_kv_heads: int = 8          # GQA
+    intermediate_size: int = 14336  # SwiGLU (silu)
+    vocab_size: int = 196608
+    rope_theta: float = 500000.0
+    max_position_embeddings: int = 65536
 
 
 @dataclass

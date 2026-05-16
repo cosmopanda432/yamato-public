@@ -133,14 +133,14 @@ class TajikraoOutput(nn.Module):
     最終的なトークン選択を行う。
 
     Args:
-        d_model: 隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
+        d_model: 隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
         max_tokens: 注連縄の最大出力トークン数
         repeat_penalty: 繰り返しペナルティ係数
     """
 
     def __init__(
         self,
-        d_model: int = 3584,
+        d_model: int = 4096,
         max_tokens: int = 2048,
         repeat_penalty: float = 1.2,
     ) -> None:

@@ -2,7 +2,7 @@
 
 > **前提文書**: `yamatoLLM_prompt.md`, 各層の設計書
 >
-> **ベースモデル**: Qwen3.5-9B (Apache 2.0)
+> **ベースモデル**: llm-jp-4-8b-base (Apache 2.0)
 >
 > **推論環境**: RTX 3060 (12GB VRAM)
 >
@@ -14,7 +14,7 @@
 
 1. [現状の棚卸し](#現状の棚卸し)
 2. [全体アーキテクチャ](#全体アーキテクチャ)
-3. [Qwen3.5-9B 統合設計](#qwen35-9b-統合設計)
+3. [llm-jp-4-8b-base 統合設計](#qwen3-8b-統合設計)
 4. [3層の実装設計](#3層の実装設計)
 5. [評価フレームワーク](#評価フレームワーク)
 6. [ファイル構成](#ファイル構成)
@@ -54,7 +54,7 @@
 
 ### 未着手
 
-- Qwen3.5-9B との統合
+- llm-jp-4-8b-base との統合
 - 3層統合モデル (yamato_model.py)
 - 学習パイプライン（RunPod用スクリプト群）
 - データセット作成パイプライン
@@ -148,18 +148,18 @@
 
 ---
 
-## Qwen3.5-9B 統合設計
+## llm-jp-4-8b-base 統合設計
 
 ### 設計方針: Backbone + カスタムヘッド
 
-Qwen3.5-9B の Transformer 層をそのまま活用し、yamatoLLM 固有の処理をカスタム層として追加する。
+llm-jp-4-8b-base の Transformer 層をそのまま活用し、yamatoLLM 固有の処理をカスタム層として追加する。
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  YamatoLLM                                                   │
 │                                                               │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │  Qwen3.5-9B (frozen base or LoRA)                    │   │
+│  │  llm-jp-4-8b-base (frozen base or LoRA)                    │   │
 │  │  ├── Embedding (→ 高御産巣日神の役割)                │   │
 │  │  ├── RMSNorm                                         │   │
 │  │  ├── Transformer × 40 layers (→ 神世七代の役割)      │   │
@@ -209,16 +209,17 @@ Qwen3.5-9B の Transformer 層をそのまま活用し、yamatoLLM 固有の処�
 # kojiki_lm/qwen_adapter.py
 
 """
-国譲り — Qwen3.5-9B の重みを yamatoLLM に継承する
+国譲り — llm-jp-4-8b-base の重みを yamatoLLM に継承する
 
-Qwen のアーキテクチャ:
-  - Hidden size: 3584
-  - Num layers: 40
-  - Num attention heads: 28
-  - Num KV heads: 4 (GQA)
-  - Intermediate size: 18944 (SwiGLU)
-  - Vocab size: 151936
-  - RoPE theta: 1000000
+llm-jp-4-8b-base のアーキテクチャ (LlamaForCausalLM):
+  - Hidden size: 4096
+  - Num layers: 32
+  - Num attention heads: 32
+  - Num KV heads: 8 (GQA)
+  - Intermediate size: 14336 (SwiGLU / silu)
+  - Vocab size: 196608
+  - RoPE theta: 500000
+  - Max position embeddings: 65536
 
 yamatoLLM が追加するもの:
   - 意図分類ヘッド (OmoikaneIntentRouter)
@@ -230,10 +231,10 @@ yamatoLLM が追加するもの:
 """
 
 class QwenAdapter:
-    """Qwen3.5-9B のロードとカスタム層の注入"""
+    """llm-jp-4-8b-base のロードとカスタム層の注入"""
 
     @staticmethod
-    def load_base_model(model_name="Qwen/Qwen3.5-9B", quantize=None):
+    def load_base_model(model_name="Qwen/llm-jp-4-8b-base", quantize=None):
         """
         ベースモデルのロード
 
@@ -269,7 +270,7 @@ class QwenAdapter:
 yamatoLLM — 3層統合モデル
 
 言語処理層 (岩戸隠れ) + コード生成層 (KojikiLM) + ガバナンス層 (憲法十七条)
-をQwen3.5-9B backbone 上で統合する
+をllm-jp-4-8b-base backbone 上で統合する
 """
 
 class YamatoLLM(nn.Module):
@@ -576,7 +577,7 @@ verdict:
 ```
 kojiki_lm/
 ├── yamato_model.py              # 3層統合モデル
-├── qwen_adapter.py              # Qwen3.5-9B ローダー + LoRA注入
+├── qwen_adapter.py              # llm-jp-4-8b-base ローダー + LoRA注入
 ├── yamato_config.py             # yamatoLLM 統合設定
 │
 ├── iwato/                       # 言語処理層
@@ -689,7 +690,7 @@ scripts/
 ### RTX 3060 (12GB) での推論
 
 ```
-Qwen3.5-9B FP16 = ~18GB → 載らない
+llm-jp-4-8b-base FP16 = ~18GB → 載らない
 
 解決策:
   4bit 量子化 (GPTQ/AWQ): ~5GB
@@ -703,7 +704,7 @@ Qwen3.5-9B FP16 = ~18GB → 載らない
 ### RunPod (A100 80GB) での学習
 
 ```
-Qwen3.5-9B FP16 = ~18GB
+llm-jp-4-8b-base FP16 = ~18GB
   + LoRA アダプタ (rank=32): ~0.2GB
   + Optimizer states: ~0.4GB (LoRA params のみ)
   + Gradient: ~0.4GB
@@ -727,7 +728,7 @@ Qwen3.5-9B FP16 = ~18GB
 
 ## 結語
 
-yamatoLLM の実装は、Qwen3.5-9B の「国譲り」（重み継承）を基盤に、3層の独自アーキテクチャをカスタムヘッドとLoRAで追加する方式を採る。
+yamatoLLM の実装は、llm-jp-4-8b-base の「国譲り」（重み継承）を基盤に、3層の独自アーキテクチャをカスタムヘッドとLoRAで追加する方式を採る。
 
 既存の KojikiLM プロトタイプ（41M）の設計思想と神話マッピングはそのまま継承しつつ、9B スケールの事前学習知識を活用することで、RTX 3060 での推論可能性とアーキテクチャの独自性を両立する。
 

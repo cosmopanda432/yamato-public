@@ -2,7 +2,7 @@
 yamatoLLM — 3層統合モデル
 
 言語処理層 (岩戸隠れ) + コード生成層 (Julia-no-Mikoto) + ガバナンス層 (憲法十七条)
-を Qwen3.5-9B backbone 上で統合する。
+を llm-jp-4-8b backbone 上で統合する。
 
 推論フロー:
     [ユーザー入力]
@@ -74,10 +74,10 @@ class YamatoLLM(nn.Module):
     """
     yamatoLLM — 3層統合モデル
 
-    Qwen3.5-9B を backbone とし、3層のカスタムコンポーネントを統合する。
+    llm-jp-4-8b を backbone とし、3層のカスタムコンポーネントを統合する。
 
     構成:
-        backbone:       Qwen3.5-9B (frozen or LoRA)
+        backbone:       llm-jp-4-8b (frozen or LoRA)
         intent_router:  思兼神（意図分類）
         sanitizer:      忌部（入出力浄化）
         kotoyosashi:    言依さし（コード生成層への変換）
@@ -113,12 +113,26 @@ class YamatoLLM(nn.Module):
 
         国譲り（Stage 1）で呼ばれる。
         ランダム初期化された yamatoLLM 固有のヘッドを追加。
+        backbone と同じデバイス・compute dtype に揃える。
         """
         self.custom_heads, self.sanitizer = QwenAdapter.attach_custom_heads(
             model=self.backbone,
             config=self.config,
         )
-        logger.info("Custom heads initialized (random weights)")
+
+        backbone_param = next(self.backbone.parameters())
+        device = backbone_param.device
+        # bnb 4bit/8bit のとき param.dtype は uint8 — compute dtype (bfloat16) に揃える
+        if hasattr(backbone_param, "quant_state"):
+            dtype = torch.bfloat16
+        else:
+            dtype = backbone_param.dtype
+        self.custom_heads = self.custom_heads.to(device=device, dtype=dtype)
+
+        logger.info(
+            "Custom heads initialized (random weights, device=%s, dtype=%s)",
+            device, dtype,
+        )
 
     def get_hidden_states(self, input_ids, attention_mask=None):
         """
@@ -442,7 +456,7 @@ class YamatoLLM(nn.Module):
     @classmethod
     def from_qwen(
         cls,
-        model_name: str = "Qwen/Qwen3.5-9B",
+        model_name: str = "llm-jp/llm-jp-4-8b-base",
         quantize: Optional[str] = None,
         config: Optional[YamatoConfig] = None,
     ) -> "YamatoLLM":

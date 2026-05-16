@@ -709,7 +709,7 @@ class TensonKorinQuantizer:
 
         # BitsAndBytes 4bit (シンプル)
         model, tokenizer = quantizer.descend_bnb(
-            model_name="Qwen/Qwen3.5-9B",
+            model_name="llm-jp/llm-jp-4-8b-base",
             output_path="checkpoints/yamato_final_4bit/",
         )
 

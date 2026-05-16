@@ -27,7 +27,7 @@
 ### 神話マッピング
 
 ```
-国譲り     → Qwen3.5-9B の重みで初期化（出雲の国を譲り受ける）
+国譲り     → llm-jp-4-8b-base の重みで初期化（出雲の国を譲り受ける）
 天孫降臨   → 独自コンポーネント追加 + LoRA SFT（天から地上に降りる）
 禊（三貴子）→ 3層への分化 SFT（三貴子が生まれる）
 神武東征   → 統合テスト・DPO・最適化（東の地を平定する）
@@ -38,7 +38,7 @@
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  Stage 1: 国譲り                                              │
-│  Qwen3.5-9B → yamatoLLM 骨格にマッピング                     │
+│  llm-jp-4-8b-base → yamatoLLM 骨格にマッピング                     │
 │  カスタムヘッド（意図分類・型予測・信頼度等）をランダム初期化   │
 │  出力: yamato_base.pt                                         │
 └───────────────────────────┬──────────────────────────────────┘
@@ -75,11 +75,11 @@
 
 ### 目的
 
-Qwen3.5-9B の事前学習済み重みを yamatoLLM の骨格に移し替える。「出雲の国（Qwen の知識）を天津神（yamatoLLM）に譲る」。
+llm-jp-4-8b-base の事前学習済み重みを yamatoLLM の骨格に移し替える。「出雲の国（Qwen の知識）を天津神（yamatoLLM）に譲る」。
 
 ### やること
 
-1. Qwen3.5-9B をロード
+1. llm-jp-4-8b-base をロード
 2. yamatoLLM のカスタムヘッドを定義してランダム初期化
 3. 結合して yamato_base.pt として保存
 
@@ -94,25 +94,25 @@ Qwen3.5-9B の事前学習済み重みを yamatoLLM の骨格に移し替える�
 # scripts/train_kuniyuzuri.py
 
 """
-Stage 1: 国譲り — Qwen3.5-9B → yamatoLLM 初期化
+Stage 1: 国譲り — llm-jp-4-8b-base → yamatoLLM 初期化
 
 「大国主命、国を天津神に譲り渡す」
 Qwen の事前学習知識をそのまま継承する。
 
 Usage (RunPod):
     python scripts/train_kuniyuzuri.py \
-        --base-model Qwen/Qwen3.5-9B \
+        --base-model Qwen/llm-jp-4-8b-base \
         --output checkpoints/yamato_base.pt
 
 Usage (ローカル確認用、4bit):
     python scripts/train_kuniyuzuri.py \
-        --base-model Qwen/Qwen3.5-9B \
+        --base-model Qwen/llm-jp-4-8b-base \
         --quantize 4bit \
         --output checkpoints/yamato_base_4bit.pt
 """
 
 def main():
-    # 1. Qwen3.5-9B ロード
+    # 1. llm-jp-4-8b-base ロード
     base_model = QwenAdapter.load_base_model(args.base_model, quantize=args.quantize)
 
     # 2. yamatoLLM カスタムヘッドの追加
@@ -135,7 +135,7 @@ def main():
 
 ```
 checkpoints/yamato_base.pt
-├── Qwen3.5-9B の全重み（frozen）
+├── llm-jp-4-8b-base の全重み（frozen）
 ├── OmoikaneIntentRouter（ランダム初期化）
 ├── TsukuyomiTypeHead（ランダム初期化）
 ├── SusanooErrorHead（ランダム初期化）
@@ -418,13 +418,13 @@ LoRA マージ — 全ステージのアダプタを統合
 Usage:
     # LoRA を base model にマージ
     python scripts/merge_lora.py \
-        --base-model Qwen/Qwen3.5-9B \
+        --base-model Qwen/llm-jp-4-8b-base \
         --adapters checkpoints/yamato_jinmu/ \
         --output checkpoints/yamato_final/
 
     # 4bit 量子化版の作成（RTX 3060 推論用）
     python scripts/merge_lora.py \
-        --base-model Qwen/Qwen3.5-9B \
+        --base-model Qwen/llm-jp-4-8b-base \
         --adapters checkpoints/yamato_jinmu/ \
         --output checkpoints/yamato_final_4bit/ \
         --quantize gptq
@@ -562,7 +562,7 @@ pip install -r requirements.txt
 pip install peft bitsandbytes accelerate trl
 
 # 3. Qwen モデルのダウンロード（初回のみ）
-python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.from_pretrained('Qwen/Qwen3.5-9B')"
+python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.from_pretrained('Qwen/llm-jp-4-8b-base')"
 ```
 
 ### 実行順序
@@ -570,7 +570,7 @@ python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.f
 ```bash
 # Stage 1: 国譲り（~5分）
 python scripts/train_kuniyuzuri.py \
-    --base-model Qwen/Qwen3.5-9B \
+    --base-model Qwen/llm-jp-4-8b-base \
     --output checkpoints/yamato_base.pt
 
 # Stage 2: 天孫降臨（~数時間、A100で）

@@ -44,13 +44,13 @@ class BonpuConfidence(nn.Module):
     完全な確信も完全な不確信も持たない。
 
     Args:
-        d_model: モデルの隠れ層次元数（default: 3584）。
+        d_model: モデルの隠れ層次元数（default: 4096）。
         config: KenpouConfig または kenpou 属性を持つ YamatoConfig。
     """
 
     def __init__(
         self,
-        d_model: int = 3584,
+        d_model: int = 4096,
         config: Optional[Any] = None,
     ):
         super().__init__()

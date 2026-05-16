@@ -45,11 +45,11 @@ class MagatamaChaining(nn.Module):
     元の hidden_states が持つ文脈情報を確実に下流へ伝達する。
 
     Args:
-        d_model: 隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
+        d_model: 隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
         dropout: ドロップアウト率
     """
 
-    def __init__(self, d_model: int = 3584, dropout: float = 0.1) -> None:
+    def __init__(self, d_model: int = 4096, dropout: float = 0.1) -> None:
         super().__init__()
         self.norm = nn.LayerNorm(d_model)
         self.chain_transform = nn.Sequential(
@@ -94,7 +94,7 @@ class FutodamaRetriever(nn.Module):
         5. MagatamaChaining で意味的連鎖を保持
 
     Args:
-        d_model:   隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
+        d_model:   隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
         num_heads: クロスアテンションのヘッド数
         top_k:     検索時の上位 k 件数
         dropout:   ドロップアウト率
@@ -102,7 +102,7 @@ class FutodamaRetriever(nn.Module):
 
     def __init__(
         self,
-        d_model: int = 3584,
+        d_model: int = 4096,
         num_heads: int = 4,
         top_k: int = 5,
         dropout: float = 0.1,

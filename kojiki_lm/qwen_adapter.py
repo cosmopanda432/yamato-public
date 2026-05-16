@@ -1,15 +1,21 @@
 """
-国譲り — Qwen3.5-9B の重みを yamatoLLM に継承する
+国譲り — llm-jp-4-8b-base の重みを yamatoLLM に継承する
 
 「大国主命、国を天津神に譲り渡す」
 
-Qwen3.5-9B のアーキテクチャ:
-  - Hidden size: 3584
-  - Num layers: 40
-  - Num attention heads: 28 (GQA: 4 KV heads)
-  - Intermediate size: 18944 (SwiGLU)
-  - Vocab size: 151936
-  - RoPE theta: 1000000
+注: クラス名は履歴経緯で "QwenAdapter" を維持しているが、
+現在のデフォルトは llm-jp-4-8b-base (LlamaForCausalLM)。
+カスタムヘッドが期待する hidden_size=4096 は両者で一致。
+
+llm-jp-4-8b-base のアーキテクチャ:
+  - Architecture: LlamaForCausalLM
+  - Hidden size: 4096
+  - Num layers: 32
+  - Num attention heads: 32 (GQA: 8 KV heads)
+  - Intermediate size: 14336 (SwiGLU / silu)
+  - Vocab size: 196608
+  - RoPE theta: 500000
+  - Max position embeddings: 65536
 
 yamatoLLM が追加するもの:
   - 意図分類ヘッド (OmoikaneIntentRouter)
@@ -37,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 class QwenAdapter:
     """
-    Qwen3.5-9B のロードとカスタム層の注入
+    llm-jp-4-8b のロードとカスタム層の注入
 
     3つの操作を提供:
     1. load_base_model: Qwen ロード（量子化オプション付き）
@@ -47,13 +53,13 @@ class QwenAdapter:
 
     @staticmethod
     def load_base_model(
-        model_name: str = "Qwen/Qwen3.5-9B",
+        model_name: str = "llm-jp/llm-jp-4-8b-base",
         quantize: Optional[str] = None,
         device_map: str = "auto",
         torch_dtype: Optional[Any] = None,
     ):
         """
-        Qwen3.5-9B ベースモデルのロード
+        llm-jp-4-8b ベースモデルのロード
 
         Args:
             model_name: HuggingFace モデル名

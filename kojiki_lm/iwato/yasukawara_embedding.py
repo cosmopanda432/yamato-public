@@ -36,11 +36,11 @@ class YasukawaraEmbedding(nn.Module):
     オプションで会話履歴コンテキストを統合して返す。
 
     Args:
-        d_model: 隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
+        d_model: 隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
         dropout: コンテキスト射影後のドロップアウト率
     """
 
-    def __init__(self, d_model: int = 3584, dropout: float = 0.1) -> None:
+    def __init__(self, d_model: int = 4096, dropout: float = 0.1) -> None:
         super().__init__()
         self.d_model = d_model
 

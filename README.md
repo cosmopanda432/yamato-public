@@ -1,6 +1,6 @@
 # yamatoLLM
 
-Japanese-specialized LLM based on Qwen3.5-9B.
+Japanese-specialized LLM based on llm-jp/llm-jp-4-8b-base.
 
 ## Architecture
 

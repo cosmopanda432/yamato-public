@@ -16,7 +16,7 @@
 
 ```
 高天原 (FP16)                    葦原中国 (INT4)
-  Qwen3.5-9B                      yamatoLLM 推論版
+  llm-jp-4-8b-base                      yamatoLLM 推論版
   ~18GB VRAM                       ~5GB VRAM
   A100/H100                        RTX 3060
        │                               ▲
@@ -127,8 +127,8 @@
 ### 量子化後の内訳
 
 ```
-Qwen3.5-9B (INT4/NF4):
-  重みパラメータ:  9.3B × 0.5 bytes (4bit)  = ~4.7GB
+llm-jp-4-8b-base (INT4/NF4):
+  重みパラメータ:  8.2B × 0.5 bytes (4bit)  = ~4.1GB
   二重量子化オーバーヘッド:                    = ~0.1GB
   ──────────────────────────────────────────
   モデル重み合計:                              ≈ 4.8GB

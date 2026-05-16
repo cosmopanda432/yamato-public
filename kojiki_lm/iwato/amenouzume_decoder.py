@@ -66,15 +66,15 @@ class ManyoFilter(nn.Module):
     本フィルタは多様なトーンを切り替えて出力を調整する。
 
     Args:
-        vocab_size: 語彙サイズ (Qwen3.5-9B = 151936)
-        d_model:    隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
+        vocab_size: 語彙サイズ (llm-jp-4-8b = 196608)
+        d_model:    隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
         num_tones:  トーンの種類数 (デフォルト: 4)
     """
 
     def __init__(
         self,
         vocab_size: int,
-        d_model: int = 3584,
+        d_model: int = 4096,
         num_tones: int = NUM_TONES,
     ) -> None:
         super().__init__()
@@ -147,14 +147,14 @@ class AmenouzumeDecoder(nn.Module):
         4. P(w_t) 確率分布を出力
 
     Args:
-        d_model:    隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
-        vocab_size: 語彙サイズ (Qwen3.5-9B = 151936)
+        d_model:    隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
+        vocab_size: 語彙サイズ (llm-jp-4-8b = 196608)
     """
 
     def __init__(
         self,
-        d_model: int = 3584,
-        vocab_size: int = 151936,
+        d_model: int = 4096,
+        vocab_size: int = 196608,
     ) -> None:
         super().__init__()
         self.d_model = d_model

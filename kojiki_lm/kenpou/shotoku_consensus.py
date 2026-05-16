@@ -42,13 +42,13 @@ class ShotokuConsensus(nn.Module):
     統合方法を切り替える。少事は即断、大事は合議。
 
     Args:
-        d_model: モデルの隠れ層次元数（default: 3584）。
+        d_model: モデルの隠れ層次元数（default: 4096）。
         config: KenpouConfig または kenpou 属性を持つ YamatoConfig。
     """
 
     def __init__(
         self,
-        d_model: int = 3584,
+        d_model: int = 4096,
         config: Optional[Any] = None,
     ):
         super().__init__()

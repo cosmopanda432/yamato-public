@@ -99,14 +99,14 @@ class KotoyosashiProtocol(nn.Module):
     OracleFormat を生成する。
 
     Args:
-        d_model: 隠れ層の次元数 (Qwen3.5-9B hidden_size = 3584)
+        d_model: 隠れ層の次元数 (llm-jp-4-8b hidden_size = 4096)
         max_hints: ヒントとして抽出する最大数
         num_julia_types: Julia 共通型の数
     """
 
     def __init__(
         self,
-        d_model: int = 3584,
+        d_model: int = 4096,
         max_hints: int = 8,
         num_julia_types: int = len(COMMON_JULIA_TYPES),
     ) -> None:
