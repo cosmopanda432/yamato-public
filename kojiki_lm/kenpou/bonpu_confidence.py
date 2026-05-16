@@ -16,21 +16,10 @@
 過信も自己否定もしない中庸の態度を維持する。
 """
 
-from typing import Any, Dict, Optional
+from typing import Dict
 
 import torch
 import torch.nn as nn
-
-from .kenpou_config import KenpouConfig, DEFAULT_KENPOU_CONFIG
-
-
-def _get_config_value(config: Any, attr: str, default: Any) -> Any:
-    """KenpouConfig または YamatoConfig から属性を安全に取得する。"""
-    if hasattr(config, "kenpou") and hasattr(config.kenpou, attr):
-        return getattr(config.kenpou, attr)
-    if hasattr(config, attr):
-        return getattr(config, attr)
-    return default
 
 
 class BonpuConfidence(nn.Module):
@@ -45,26 +34,24 @@ class BonpuConfidence(nn.Module):
 
     Args:
         d_model: モデルの隠れ層次元数（default: 4096）。
-        config: KenpouConfig または kenpou 属性を持つ YamatoConfig。
+        floor: 信頼度の下限。
+        ceiling: 信頼度の上限。
+        tau: 不確実性フラグの閾値（confidence < tau で True）。
     """
 
     def __init__(
         self,
         d_model: int = 4096,
-        config: Optional[Any] = None,
+        floor: float = 0.1,
+        ceiling: float = 1.0 - 1e-4,
+        tau: float = 0.6,
     ):
         super().__init__()
 
-        if config is None:
-            config = DEFAULT_KENPOU_CONFIG
-
         self.d_model = d_model
-        self.floor = _get_config_value(config, "confidence_floor", 0.1)
-        self.ceiling = _get_config_value(config, "confidence_ceiling", 1.0 - 1e-4)
-        self.tau = _get_config_value(config, "truthfulness_tau", 0.6)
-        self.uncertainty_expression = _get_config_value(
-            config, "uncertainty_expression", True
-        )
+        self.floor = floor
+        self.ceiling = ceiling
+        self.tau = tau
 
         # 信頼度ヘッド: hidden_states → [0, 1] のスカラー
         self.confidence_head = nn.Sequential(
