@@ -50,9 +50,14 @@ A small **BonpuConfidence** head produces an uncertainty score so the model can 
 - Forward / generate path covering the Amenomihashira three-stage protocol
 
 ### Phase 3 — Data
-- TypeScript code corpus with type annotations (public sources)
-- Synthetic data: prompt → typed TypeScript output pairs
-- Negative examples for hallucination detection (APIs that don't exist)
+See [DATA_DESIGN.md](DATA_DESIGN.md) for the full pipeline design.
+
+Three datasets are built in parallel:
+- **A. Typed TS corpus** — The Stack v2 TS subset, filtered for genuine `.ts` files with explicit type annotations
+- **B. Token-level type labels** — extracted via the TypeScript Compiler API in a Node subprocess; mapped to a ~200–400 entry type vocabulary including instability markers (`ImplicitAny`, `ExplicitAny`, `ErrorType`)
+- **C. Hallucination negatives** — synthesized by mutating compiling code (fake methods, wrong arg counts, fabricated imports) and keeping only those that actually fail `tsc`
+
+Target sizes: 50–100k SFT files, 30–50k token-type labeled samples, 20–50k hallucination pairs.
 
 ### Phase 4 — SFT
 - QLoRA on the backbone (LoRA target: q_proj, v_proj, gate_proj)
@@ -93,15 +98,25 @@ These thresholds are independently verifiable by anyone with the released checkp
 
 ## Status
 
+### Done
 - [x] Base architecture scaffolding (`yamato_model.py`, `qwen_adapter.py`)
 - [x] INT4 quantization pipeline (`tenson_korin_quantizer.py`)
-- [ ] Migrate config from llm-jp-4-8b to Qwen3-Coder-8B
-- [ ] TypeScript type vocabulary
+- [x] BonpuConfidence head (uncertainty signaling)
+- [x] Data pipeline design ([DATA_DESIGN.md](DATA_DESIGN.md))
+
+### Next (Architecture migration)
+- [ ] `yamato_config.py` — migrate to Qwen3-Coder-8B spec, drop legacy iwato refs
+- [ ] `yamato_model.py` — clean up legacy refs, align with Qwen3-Coder API
+- [ ] `qwen_adapter.py` — default model name Qwen3-Coder-8B, remove iwato imports
+- [ ] `tenson_korin_quantizer.py` — default model name Qwen3-Coder-8B
+- [ ] TypeScript type vocabulary (`config/ts_type_vocab.json`)
 - [ ] TsukuyomiTypeHead (TS-adapted port of Julia-no-Mikoto's type head)
 - [ ] Hiruko Detector for TypeScript
 - [ ] Amenomihashira three-stage generation
-- [ ] Phase 1 baseline measurement
-- [ ] Phase 2 architecture integration
-- [ ] Phase 3 data pipeline
-- [ ] Phase 4 SFT
-- [ ] Phase 5 evaluation
+
+### Phase milestones
+- [ ] Phase 1: baseline measurement on Qwen3-Coder-8B
+- [ ] Phase 2: architecture integration
+- [ ] Phase 3: data pipeline implementation (TS Compiler API wrapper → labeled dataset)
+- [ ] Phase 4: QLoRA SFT on RunPod
+- [ ] Phase 5: evaluation vs baseline, release decision
