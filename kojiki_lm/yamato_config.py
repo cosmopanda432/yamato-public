@@ -45,7 +45,7 @@ class LoRAConfig:
     ])
     modules_to_save: List[str] = field(default_factory=lambda: [
         "confidence",
-        # 実装後に "type_head", "hiruko_detector" を追加する
+        "type_head",
     ])
 
 

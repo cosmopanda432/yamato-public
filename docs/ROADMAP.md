@@ -134,13 +134,13 @@ Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/e
 - [x] `qwen_adapter.py` — default model name Qwen2.5-Coder-7B, remove iwato imports
 - [x] `tenson_korin_quantizer.py` — default model name Qwen2.5-Coder-7B
 - [x] TypeScript type vocabulary (`config/ts_type_vocab.json`)
-- [ ] TsukuyomiTypeHead (TS-adapted port of Julia-no-Mikoto's type head)
-- [ ] Hiruko Detector for TypeScript
-- [ ] Amenomihashira three-stage generation
+- [x] TsukuyomiTypeHead (TS-adapted port of Julia-no-Mikoto's type head)
+- [x] Hiruko Detector for TypeScript
+- [x] Amenomihashira three-stage generation
 
 ### Phase milestones
 - [x] Phase 1: baseline measurement on Qwen2.5-Coder-7B (humaneval-ts and mbpp-ts both done)
-- [ ] Phase 2: architecture integration
+- [x] Phase 2: architecture integration (TsukuyomiTypeHead 1.97M + HirukoDetector + AmenomihashiraProtocol attached to YamatoLLM)
 - [ ] Phase 3: data pipeline implementation (TS Compiler API wrapper → labeled dataset)
 - [ ] Phase 4: QLoRA SFT on RunPod
 - [ ] Phase 5: evaluation vs baseline, release decision

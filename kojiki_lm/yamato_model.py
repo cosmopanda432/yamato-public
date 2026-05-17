@@ -110,18 +110,26 @@ class YamatoLLM(nn.Module):
         input_ids,
         attention_mask=None,
         labels=None,
+        type_labels=None,
         confidence_labels=None,
         **kwargs,
     ):
         """
         統合 forward pass（学習時）
 
+        Args:
+            labels:            [B, L] 次トークン教師 (CLM)
+            type_labels:       [B, L] per-token TS 型 ID (TsukuyomiTypeHead 用)
+            confidence_labels: [B] 信頼度教師 (BonpuConfidence 用)
+
         Returns:
             dict with:
-                loss: 統合損失（base_loss + 補助損失）
-                logits: 次トークン logits
-                hidden_states: 最終層 hidden states
-                confidence: 信頼度スコア（custom_heads 初期化済の場合）
+                loss:           統合損失 (base + type * w + confidence * w)
+                logits:         次トークン logits
+                type_logits:    TS 型 logits (custom_heads 初期化済の場合)
+                type_preds:     TS 型 argmax
+                confidence:     信頼度スコア
+                hidden_states:  最終層 hidden states
         """
         backbone_outputs = self.backbone(
             input_ids=input_ids,
@@ -145,7 +153,17 @@ class YamatoLLM(nn.Module):
         if self.custom_heads is None:
             return result
 
-        # 信頼度ヘッド
+        total_loss = base_loss
+
+        # 月読 (TsukuyomiTypeHead) — per-token 型予測
+        type_out = self.custom_heads["type_head"](hidden_states, type_labels=type_labels)
+        result["type_logits"] = type_out["type_logits"]
+        result["type_preds"] = type_out["type_preds"]
+        if "type_loss" in type_out:
+            result["type_loss"] = type_out["type_loss"]
+            total_loss = total_loss + self.config.type_head.loss_weight * type_out["type_loss"]
+
+        # 凡夫 (BonpuConfidence) — 信頼度
         conf_out = self.custom_heads["confidence"](hidden_states)
         result["confidence"] = conf_out["confidence"]
         result["uncertainty_flag"] = conf_out["uncertainty_flag"]
@@ -157,8 +175,9 @@ class YamatoLLM(nn.Module):
                 confidence_labels.to(conf_out["confidence"].dtype),
             )
             result["confidence_loss"] = conf_loss
-            result["loss"] = base_loss + 0.3 * conf_loss
+            total_loss = total_loss + 0.3 * conf_loss
 
+        result["loss"] = total_loss
         return result
 
     @torch.no_grad()
@@ -208,6 +227,9 @@ class YamatoLLM(nn.Module):
             output.confidence = conf_out["confidence"].item()
             output.uncertainty_flag = bool(conf_out["uncertainty_flag"].item())
             output.truthfulness = conf_out["truthfulness"].item()
+            # 月読: 生成系列全体の TS 型予測
+            type_out = self.custom_heads["type_head"](gen_hidden)
+            output.type_predictions = type_out["type_preds"]
 
         return output
 

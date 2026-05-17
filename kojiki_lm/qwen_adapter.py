@@ -150,8 +150,9 @@ class QwenAdapter:
         """
         yamatoLLM 固有のカスタムヘッドを ModuleDict として作成して返す。
 
-        現在は BonpuConfidence のみ。TsukuyomiTypeHead / HirukoDetector などは
-        実装後にここに追加する。
+        現在組み込み:
+          - confidence (BonpuConfidence): 信頼度スコア
+          - type_head (TsukuyomiTypeHead): per-token TS 型予測
         """
         if config is None:
             config = YamatoConfig()
@@ -159,9 +160,15 @@ class QwenAdapter:
         d_model = config.d_model
 
         from .kenpou.bonpu_confidence import BonpuConfidence
+        from .yomi.tsukuyomi_type_head import TsukuyomiTypeHead
 
         heads = nn.ModuleDict({
             "confidence": BonpuConfidence(d_model=d_model),
+            "type_head": TsukuyomiTypeHead(
+                d_model=d_model,
+                type_vocab_size=config.type_head.vocab_size,
+                hidden_dim=config.type_head.hidden_dim,
+            ),
         })
 
         total_params = sum(p.numel() for p in heads.parameters())
