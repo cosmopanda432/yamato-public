@@ -141,6 +141,7 @@ Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/e
 ### Phase milestones
 - [x] Phase 1: baseline measurement on Qwen2.5-Coder-7B (humaneval-ts and mbpp-ts both done)
 - [x] Phase 2: architecture integration (TsukuyomiTypeHead 1.97M + HirukoDetector + AmenomihashiraProtocol attached to YamatoLLM)
+- [⏳] Phase 4: SFT pilot done on RTX 3060 (type_loss 6.22 → 2.37 over 20 update steps on 100 samples). Full run pending on RunPod.
 - [ ] Phase 3: data pipeline implementation (TS Compiler API wrapper → labeled dataset)
 - [ ] Phase 4: QLoRA SFT on RunPod
 - [ ] Phase 5: evaluation vs baseline, release decision
