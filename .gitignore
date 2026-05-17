@@ -4,14 +4,15 @@ __pycache__/
 *.pt
 *.bin
 *.safetensors
-checkpoints/
-data/
-models/
-outputs/
-wandb/
-.env
 *.log
-models/
-external/
-results/
+.env
 .claude/
+
+# top-level only (allow nested e.g. scripts/data/)
+/data/
+/models/
+/checkpoints/
+/outputs/
+/wandb/
+/external/
+/results/

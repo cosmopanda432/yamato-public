@@ -1,0 +1,2107 @@
+{
+  "version": "1.0",
+  "source": "kevinjesse/ManyTypes4TypeScript",
+  "vocab_size": 256,
+  "reserved": [
+    {
+      "name": "ImplicitAny",
+      "category": "instability"
+    },
+    {
+      "name": "ExplicitAny",
+      "category": "instability"
+    },
+    {
+      "name": "ErrorType",
+      "category": "instability"
+    },
+    {
+      "name": "Bottom",
+      "category": "instability"
+    },
+    {
+      "name": "unknown",
+      "category": "primitives"
+    },
+    {
+      "name": "never",
+      "category": "primitives"
+    }
+  ],
+  "categories": {
+    "special": [
+      0
+    ],
+    "primitives": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      99,
+      122,
+      158,
+      254,
+      255
+    ],
+    "library": [
+      5,
+      9,
+      10,
+      14,
+      15,
+      16,
+      17,
+      19,
+      20,
+      28,
+      30,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      53,
+      54,
+      55,
+      56,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      82,
+      83,
+      84,
+      85,
+      87,
+      88,
+      89,
+      90,
+      91,
+      93,
+      94,
+      96,
+      97,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      119,
+      120,
+      121,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      201,
+      202,
+      204,
+      206,
+      207,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221,
+      222,
+      224,
+      225,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      249
+    ],
+    "builtins": [
+      7,
+      12,
+      13,
+      21,
+      24,
+      25,
+      27,
+      29,
+      31,
+      32,
+      52,
+      81,
+      92,
+      98,
+      118,
+      133
+    ],
+    "type_param": [
+      11,
+      69,
+      86,
+      95,
+      203,
+      205,
+      208,
+      209,
+      223,
+      248
+    ],
+    "utility": [
+      18,
+      22,
+      57,
+      183,
+      200,
+      226
+    ],
+    "structural": [
+      23,
+      26
+    ],
+    "instability": [
+      250,
+      251,
+      252,
+      253
+    ]
+  },
+  "category_counts": {
+    "special": 1,
+    "primitives": 11,
+    "library": 206,
+    "builtins": 16,
+    "type_param": 10,
+    "utility": 6,
+    "structural": 2,
+    "instability": 4
+  },
+  "id_to_type": {
+    "0": {
+      "name": "UNK",
+      "category": "special",
+      "freq": 696691
+    },
+    "1": {
+      "name": "any",
+      "category": "primitives",
+      "freq": 0
+    },
+    "2": {
+      "name": "string",
+      "category": "primitives",
+      "freq": 1482327
+    },
+    "3": {
+      "name": "number",
+      "category": "primitives",
+      "freq": 888251
+    },
+    "4": {
+      "name": "void",
+      "category": "primitives",
+      "freq": 737518
+    },
+    "5": {
+      "name": "array",
+      "category": "library",
+      "freq": 659301
+    },
+    "6": {
+      "name": "object",
+      "category": "primitives",
+      "freq": 445409
+    },
+    "7": {
+      "name": "Promise",
+      "category": "builtins",
+      "freq": 407119
+    },
+    "8": {
+      "name": "boolean",
+      "category": "primitives",
+      "freq": 356854
+    },
+    "9": {
+      "name": "Element",
+      "category": "library",
+      "freq": 82594
+    },
+    "10": {
+      "name": "__SerdeContext",
+      "category": "library",
+      "freq": 59193
+    },
+    "11": {
+      "name": "T",
+      "category": "type_param",
+      "freq": 48238
+    },
+    "12": {
+      "name": "Array",
+      "category": "builtins",
+      "freq": 34846
+    },
+    "13": {
+      "name": "Buffer",
+      "category": "builtins",
+      "freq": 34132
+    },
+    "14": {
+      "name": "Response",
+      "category": "library",
+      "freq": 30023
+    },
+    "15": {
+      "name": "HTMLElement",
+      "category": "library",
+      "freq": 29700
+    },
+    "16": {
+      "name": "Observable",
+      "category": "library",
+      "freq": 27607
+    },
+    "17": {
+      "name": "StyledComponent",
+      "category": "library",
+      "freq": 27527
+    },
+    "18": {
+      "name": "Record",
+      "category": "utility",
+      "freq": 26965
+    },
+    "19": {
+      "name": "__HttpResponse",
+      "category": "library",
+      "freq": 23045
+    },
+    "20": {
+      "name": "__HttpHandlerOptions",
+      "category": "library",
+      "freq": 22836
+    },
+    "21": {
+      "name": "Map",
+      "category": "builtins",
+      "freq": 22631
+    },
+    "22": {
+      "name": "Partial",
+      "category": "utility",
+      "freq": 22036
+    },
+    "23": {
+      "name": "Type",
+      "category": "structural",
+      "freq": 19416
+    },
+    "24": {
+      "name": "Error",
+      "category": "builtins",
+      "freq": 19156
+    },
+    "25": {
+      "name": "Date",
+      "category": "builtins",
+      "freq": 19021
+    },
+    "26": {
+      "name": "Node",
+      "category": "structural",
+      "freq": 18548
+    },
+    "27": {
+      "name": "RegExp",
+      "category": "builtins",
+      "freq": 18214
+    },
+    "28": {
+      "name": "React.FC",
+      "category": "library",
+      "freq": 18011
+    },
+    "29": {
+      "name": "Uint8Array",
+      "category": "builtins",
+      "freq": 17668
+    },
+    "30": {
+      "name": "Context",
+      "category": "library",
+      "freq": 14554
+    },
+    "31": {
+      "name": "Function",
+      "category": "builtins",
+      "freq": 14254
+    },
+    "32": {
+      "name": "Set",
+      "category": "builtins",
+      "freq": 14244
+    },
+    "33": {
+      "name": "Tensor",
+      "category": "library",
+      "freq": 13548
+    },
+    "34": {
+      "name": "BigNumber",
+      "category": "library",
+      "freq": 12347
+    },
+    "35": {
+      "name": "Event",
+      "category": "library",
+      "freq": 11295
+    },
+    "36": {
+      "name": "Request",
+      "category": "library",
+      "freq": 10105
+    },
+    "37": {
+      "name": "State",
+      "category": "library",
+      "freq": 10055
+    },
+    "38": {
+      "name": "MutableRefObject",
+      "category": "library",
+      "freq": 8699
+    },
+    "39": {
+      "name": "HTMLDivElement",
+      "category": "library",
+      "freq": 8276
+    },
+    "40": {
+      "name": "User",
+      "category": "library",
+      "freq": 8013
+    },
+    "41": {
+      "name": "FC",
+      "category": "library",
+      "freq": 7953
+    },
+    "42": {
+      "name": "Point",
+      "category": "library",
+      "freq": 7481
+    },
+    "43": {
+      "name": "Router",
+      "category": "library",
+      "freq": 7076
+    },
+    "44": {
+      "name": "MouseEvent",
+      "category": "library",
+      "freq": 7016
+    },
+    "45": {
+      "name": "IconData",
+      "category": "library",
+      "freq": 6989
+    },
+    "46": {
+      "name": "Tensor1D",
+      "category": "library",
+      "freq": 6822
+    },
+    "47": {
+      "name": "ComponentFixture",
+      "category": "library",
+      "freq": 6818
+    },
+    "48": {
+      "name": "Store",
+      "category": "library",
+      "freq": 6797
+    },
+    "49": {
+      "name": "GenericRetrier",
+      "category": "library",
+      "freq": 6762
+    },
+    "50": {
+      "name": "ExecutionContext",
+      "category": "library",
+      "freq": 6759
+    },
+    "51": {
+      "name": "Props",
+      "category": "library",
+      "freq": 6756
+    },
+    "52": {
+      "name": "Object",
+      "category": "builtins",
+      "freq": 6564
+    },
+    "53": {
+      "name": "Tensor2D",
+      "category": "library",
+      "freq": 6386
+    },
+    "54": {
+      "name": "RetryConfigurationDetails",
+      "category": "library",
+      "freq": 6362
+    },
+    "55": {
+      "name": "Vector3",
+      "category": "library",
+      "freq": 6292
+    },
+    "56": {
+      "name": "__HeaderBag",
+      "category": "library",
+      "freq": 6282
+    },
+    "57": {
+      "name": "Readonly",
+      "category": "utility",
+      "freq": 6018
+    },
+    "58": {
+      "name": "PropsWithChildren",
+      "category": "library",
+      "freq": 5970
+    },
+    "59": {
+      "name": "Player",
+      "category": "library",
+      "freq": 5742
+    },
+    "60": {
+      "name": "Mock",
+      "category": "library",
+      "freq": 5525
+    },
+    "61": {
+      "name": "Position",
+      "category": "library",
+      "freq": 5349
+    },
+    "62": {
+      "name": "Logger",
+      "category": "library",
+      "freq": 5348
+    },
+    "63": {
+      "name": "RegExpMatchArray",
+      "category": "library",
+      "freq": 5228
+    },
+    "64": {
+      "name": "DoneFn",
+      "category": "library",
+      "freq": 5052
+    },
+    "65": {
+      "name": "Vector",
+      "category": "library",
+      "freq": 5038
+    },
+    "66": {
+      "name": "JSX.Element",
+      "category": "library",
+      "freq": 4906
+    },
+    "67": {
+      "name": "ThemedStyledProps",
+      "category": "library",
+      "freq": 4784
+    },
+    "68": {
+      "name": "Token",
+      "category": "library",
+      "freq": 4700
+    },
+    "69": {
+      "name": "K",
+      "category": "type_param",
+      "freq": 4653
+    },
+    "70": {
+      "name": "ElementRef",
+      "category": "library",
+      "freq": 4627
+    },
+    "71": {
+      "name": "TextDocument",
+      "category": "library",
+      "freq": 4601
+    },
+    "72": {
+      "name": "Client",
+      "category": "library",
+      "freq": 4531
+    },
+    "73": {
+      "name": "Options",
+      "category": "library",
+      "freq": 4494
+    },
+    "74": {
+      "name": "Entity",
+      "category": "library",
+      "freq": 4490
+    },
+    "75": {
+      "name": "Expression",
+      "category": "library",
+      "freq": 4482
+    },
+    "76": {
+      "name": "KeyboardEvent",
+      "category": "library",
+      "freq": 4463
+    },
+    "77": {
+      "name": "Message",
+      "category": "library",
+      "freq": 4427
+    },
+    "78": {
+      "name": "EntityProperty",
+      "category": "library",
+      "freq": 4388
+    },
+    "79": {
+      "name": "TerminalNode",
+      "category": "library",
+      "freq": 4384
+    },
+    "80": {
+      "name": "AsyncIterableIterator",
+      "category": "library",
+      "freq": 4380
+    },
+    "81": {
+      "name": "Float32Array",
+      "category": "builtins",
+      "freq": 4340
+    },
+    "82": {
+      "name": "Config",
+      "category": "library",
+      "freq": 4337
+    },
+    "83": {
+      "name": "Document",
+      "category": "library",
+      "freq": 4229
+    },
+    "84": {
+      "name": "Tensor3D",
+      "category": "library",
+      "freq": 4208
+    },
+    "85": {
+      "name": "SourceFile",
+      "category": "library",
+      "freq": 4190
+    },
+    "86": {
+      "name": "A",
+      "category": "type_param",
+      "freq": 4185
+    },
+    "87": {
+      "name": "Address",
+      "category": "library",
+      "freq": 4150
+    },
+    "88": {
+      "name": "RegExpExecArray",
+      "category": "library",
+      "freq": 4149
+    },
+    "89": {
+      "name": "Theme",
+      "category": "library",
+      "freq": 4135
+    },
+    "90": {
+      "name": "EntityMetadata",
+      "category": "library",
+      "freq": 4129
+    },
+    "91": {
+      "name": "FunctionComponent",
+      "category": "library",
+      "freq": 4114
+    },
+    "92": {
+      "name": "Symbol",
+      "category": "builtins",
+      "freq": 4066
+    },
+    "93": {
+      "name": "Done",
+      "category": "library",
+      "freq": 4027
+    },
+    "94": {
+      "name": "Action",
+      "category": "library",
+      "freq": 4011
+    },
+    "95": {
+      "name": "U",
+      "category": "type_param",
+      "freq": 3995
+    },
+    "96": {
+      "name": "Range",
+      "category": "library",
+      "freq": 3992
+    },
+    "97": {
+      "name": "Transaction",
+      "category": "library",
+      "freq": 3963
+    },
+    "98": {
+      "name": "ArrayBuffer",
+      "category": "builtins",
+      "freq": 3933
+    },
+    "99": {
+      "name": "bigint",
+      "category": "primitives",
+      "freq": 3921
+    },
+    "100": {
+      "name": "HTMLInputElement",
+      "category": "library",
+      "freq": 3889
+    },
+    "101": {
+      "name": "AxiosResponse",
+      "category": "library",
+      "freq": 3851
+    },
+    "102": {
+      "name": "ReadonlyArray",
+      "category": "library",
+      "freq": 3820
+    },
+    "103": {
+      "name": "Tensor4D",
+      "category": "library",
+      "freq": 3799
+    },
+    "104": {
+      "name": "Result",
+      "category": "library",
+      "freq": 3742
+    },
+    "105": {
+      "name": "Uri",
+      "category": "library",
+      "freq": 3699
+    },
+    "106": {
+      "name": "ClassNameMap",
+      "category": "library",
+      "freq": 3693
+    },
+    "107": {
+      "name": "React.FunctionComponent",
+      "category": "library",
+      "freq": 3691
+    },
+    "108": {
+      "name": "BN",
+      "category": "library",
+      "freq": 3690
+    },
+    "109": {
+      "name": "coreClient.CompositeMapper",
+      "category": "library",
+      "freq": 3647
+    },
+    "110": {
+      "name": "File",
+      "category": "library",
+      "freq": 3614
+    },
+    "111": {
+      "name": "Connection",
+      "category": "library",
+      "freq": 3613
+    },
+    "112": {
+      "name": "DebugElement",
+      "category": "library",
+      "freq": 3564
+    },
+    "113": {
+      "name": "Color",
+      "category": "library",
+      "freq": 3559
+    },
+    "114": {
+      "name": "SceneObjHolder",
+      "category": "library",
+      "freq": 3534
+    },
+    "115": {
+      "name": "CanvasRenderingContext2D",
+      "category": "library",
+      "freq": 3466
+    },
+    "116": {
+      "name": "URL",
+      "category": "library",
+      "freq": 3432
+    },
+    "117": {
+      "name": "d.Config",
+      "category": "library",
+      "freq": 3414
+    },
+    "118": {
+      "name": "Generator",
+      "category": "builtins",
+      "freq": 3412
+    },
+    "119": {
+      "name": "Repository",
+      "category": "library",
+      "freq": 3365
+    },
+    "120": {
+      "name": "Spy",
+      "category": "library",
+      "freq": 3341
+    },
+    "121": {
+      "name": "ChangeDetectorRef",
+      "category": "library",
+      "freq": 3309
+    },
+    "122": {
+      "name": "undefined",
+      "category": "primitives",
+      "freq": 3263
+    },
+    "123": {
+      "name": "PublicKey",
+      "category": "library",
+      "freq": 3263
+    },
+    "124": {
+      "name": "ReactWrapper",
+      "category": "library",
+      "freq": 3249
+    },
+    "125": {
+      "name": "DocumentNode",
+      "category": "library",
+      "freq": 3187
+    },
+    "126": {
+      "name": "ts.Node",
+      "category": "library",
+      "freq": 3152
+    },
+    "127": {
+      "name": "HttpClient",
+      "category": "library",
+      "freq": 3141
+    },
+    "128": {
+      "name": "Dispatch",
+      "category": "library",
+      "freq": 3132
+    },
+    "129": {
+      "name": "React.ChangeEvent",
+      "category": "library",
+      "freq": 3110
+    },
+    "130": {
+      "name": "Selection",
+      "category": "library",
+      "freq": 3074
+    },
+    "131": {
+      "name": "JQuery",
+      "category": "library",
+      "freq": 3073
+    },
+    "132": {
+      "name": "Stream",
+      "category": "library",
+      "freq": 3063
+    },
+    "133": {
+      "name": "Iterable",
+      "category": "builtins",
+      "freq": 2977
+    },
+    "134": {
+      "name": "Item",
+      "category": "library",
+      "freq": 2972
+    },
+    "135": {
+      "name": "HTMLCanvasElement",
+      "category": "library",
+      "freq": 2967
+    },
+    "136": {
+      "name": "Expr",
+      "category": "library",
+      "freq": 2952
+    },
+    "137": {
+      "name": "ReactElement",
+      "category": "library",
+      "freq": 2940
+    },
+    "138": {
+      "name": "CancellationToken",
+      "category": "library",
+      "freq": 2905
+    },
+    "139": {
+      "name": "ActivatedRoute",
+      "category": "library",
+      "freq": 2886
+    },
+    "140": {
+      "name": "Vector2",
+      "category": "library",
+      "freq": 2882
+    },
+    "141": {
+      "name": "Scope",
+      "category": "library",
+      "freq": 2879
+    },
+    "142": {
+      "name": "VNode",
+      "category": "library",
+      "freq": 2861
+    },
+    "143": {
+      "name": "AbiFunction",
+      "category": "library",
+      "freq": 2858
+    },
+    "144": {
+      "name": "NextFunction",
+      "category": "library",
+      "freq": 2849
+    },
+    "145": {
+      "name": "Region",
+      "category": "library",
+      "freq": 2844
+    },
+    "146": {
+      "name": "vec3",
+      "category": "library",
+      "freq": 2816
+    },
+    "147": {
+      "name": "Test",
+      "category": "library",
+      "freq": 2815
+    },
+    "148": {
+      "name": "Schema",
+      "category": "library",
+      "freq": 2760
+    },
+    "149": {
+      "name": "Value",
+      "category": "library",
+      "freq": 2741
+    },
+    "150": {
+      "name": "Path",
+      "category": "library",
+      "freq": 2715
+    },
+    "151": {
+      "name": "Subscription",
+      "category": "library",
+      "freq": 2678
+    },
+    "152": {
+      "name": "List",
+      "category": "library",
+      "freq": 2674
+    },
+    "153": {
+      "name": "ShallowWrapper",
+      "category": "library",
+      "freq": 2637
+    },
+    "154": {
+      "name": "React.MouseEvent",
+      "category": "library",
+      "freq": 2601
+    },
+    "155": {
+      "name": "Diagnostic",
+      "category": "library",
+      "freq": 2596
+    },
+    "156": {
+      "name": "Identifier",
+      "category": "library",
+      "freq": 2582
+    },
+    "157": {
+      "name": "ForwardRefExoticComponent",
+      "category": "library",
+      "freq": 2572
+    },
+    "158": {
+      "name": "null",
+      "category": "primitives",
+      "freq": 2560
+    },
+    "159": {
+      "name": "Location",
+      "category": "library",
+      "freq": 2544
+    },
+    "160": {
+      "name": "DoneCallback",
+      "category": "library",
+      "freq": 2531
+    },
+    "161": {
+      "name": "ClassType",
+      "category": "library",
+      "freq": 2525
+    },
+    "162": {
+      "name": "Filter",
+      "category": "library",
+      "freq": 2520
+    },
+    "163": {
+      "name": "Dictionary",
+      "category": "library",
+      "freq": 2510
+    },
+    "164": {
+      "name": "App",
+      "category": "library",
+      "freq": 2446
+    },
+    "165": {
+      "name": "Task",
+      "category": "library",
+      "freq": 2440
+    },
+    "166": {
+      "name": "ExpressionNode",
+      "category": "library",
+      "freq": 2424
+    },
+    "167": {
+      "name": "Routes",
+      "category": "library",
+      "freq": 2405
+    },
+    "168": {
+      "name": "Declaration",
+      "category": "library",
+      "freq": 2401
+    },
+    "169": {
+      "name": "Headers",
+      "category": "library",
+      "freq": 2360
+    },
+    "170": {
+      "name": "IconType",
+      "category": "library",
+      "freq": 2359
+    },
+    "171": {
+      "name": "Block",
+      "category": "library",
+      "freq": 2355
+    },
+    "172": {
+      "name": "Scalar",
+      "category": "library",
+      "freq": 2328
+    },
+    "173": {
+      "name": "Name",
+      "category": "library",
+      "freq": 2323
+    },
+    "174": {
+      "name": "TreeNode",
+      "category": "library",
+      "freq": 2310
+    },
+    "175": {
+      "name": "Component",
+      "category": "library",
+      "freq": 2302
+    },
+    "176": {
+      "name": "IconBaseProps",
+      "category": "library",
+      "freq": 2279
+    },
+    "177": {
+      "name": "Collection",
+      "category": "library",
+      "freq": 2272
+    },
+    "178": {
+      "name": "Platform",
+      "category": "library",
+      "freq": 2262
+    },
+    "179": {
+      "name": "SymbolicTensor",
+      "category": "library",
+      "freq": 2259
+    },
+    "180": {
+      "name": "TextEditor",
+      "category": "library",
+      "freq": 2250
+    },
+    "181": {
+      "name": "FormBuilder",
+      "category": "library",
+      "freq": 2238
+    },
+    "182": {
+      "name": "Model",
+      "category": "library",
+      "freq": 2238
+    },
+    "183": {
+      "name": "Pick",
+      "category": "utility",
+      "freq": 2227
+    },
+    "184": {
+      "name": "MochaDone",
+      "category": "library",
+      "freq": 2211
+    },
+    "185": {
+      "name": "Query",
+      "category": "library",
+      "freq": 2205
+    },
+    "186": {
+      "name": "React.ReactNode",
+      "category": "library",
+      "freq": 2189
+    },
+    "187": {
+      "name": "TemplateResult",
+      "category": "library",
+      "freq": 2166
+    },
+    "188": {
+      "name": "vscode.Uri",
+      "category": "library",
+      "freq": 2138
+    },
+    "189": {
+      "name": "RootState",
+      "category": "library",
+      "freq": 2135
+    },
+    "190": {
+      "name": "React.ReactElement",
+      "category": "library",
+      "freq": 2132
+    },
+    "191": {
+      "name": "MemoizedSelector",
+      "category": "library",
+      "freq": 2127
+    },
+    "192": {
+      "name": "BigNumberish",
+      "category": "library",
+      "freq": 2123
+    },
+    "193": {
+      "name": "d.CompilerCtx",
+      "category": "library",
+      "freq": 2120
+    },
+    "194": {
+      "name": "DOMRect",
+      "category": "library",
+      "freq": 2107
+    },
+    "195": {
+      "name": "Callback",
+      "category": "library",
+      "freq": 2101
+    },
+    "196": {
+      "name": "Container",
+      "category": "library",
+      "freq": 2099
+    },
+    "197": {
+      "name": "Injector",
+      "category": "library",
+      "freq": 2099
+    },
+    "198": {
+      "name": "Ref",
+      "category": "library",
+      "freq": 2095
+    },
+    "199": {
+      "name": "HttpRequest",
+      "category": "library",
+      "freq": 2090
+    },
+    "200": {
+      "name": "Omit",
+      "category": "utility",
+      "freq": 2048
+    },
+    "201": {
+      "name": "Account",
+      "category": "library",
+      "freq": 2044
+    },
+    "202": {
+      "name": "Disposable",
+      "category": "library",
+      "freq": 2035
+    },
+    "203": {
+      "name": "B",
+      "category": "type_param",
+      "freq": 2020
+    },
+    "204": {
+      "name": "Contract",
+      "category": "library",
+      "freq": 2003
+    },
+    "205": {
+      "name": "V",
+      "category": "type_param",
+      "freq": 2003
+    },
+    "206": {
+      "name": "Page",
+      "category": "library",
+      "freq": 1993
+    },
+    "207": {
+      "name": "NodeListOf",
+      "category": "library",
+      "freq": 1989
+    },
+    "208": {
+      "name": "R",
+      "category": "type_param",
+      "freq": 1979
+    },
+    "209": {
+      "name": "S",
+      "category": "type_param",
+      "freq": 1963
+    },
+    "210": {
+      "name": "ParseNode",
+      "category": "library",
+      "freq": 1960
+    },
+    "211": {
+      "name": "Transform",
+      "category": "library",
+      "freq": 1940
+    },
+    "212": {
+      "name": "Configuration",
+      "category": "library",
+      "freq": 1939
+    },
+    "213": {
+      "name": "Option",
+      "category": "library",
+      "freq": 1936
+    },
+    "214": {
+      "name": "AppState",
+      "category": "library",
+      "freq": 1917
+    },
+    "215": {
+      "name": "NodePath",
+      "category": "library",
+      "freq": 1909
+    },
+    "216": {
+      "name": "Project",
+      "category": "library",
+      "freq": 1883
+    },
+    "217": {
+      "name": "Term",
+      "category": "library",
+      "freq": 1860
+    },
+    "218": {
+      "name": "Command",
+      "category": "library",
+      "freq": 1857
+    },
+    "219": {
+      "name": "HTMLImageElement",
+      "category": "library",
+      "freq": 1842
+    },
+    "220": {
+      "name": "Parser",
+      "category": "library",
+      "freq": 1834
+    },
+    "221": {
+      "name": "WebGLRenderingContext",
+      "category": "library",
+      "freq": 1833
+    },
+    "222": {
+      "name": "Point3d",
+      "category": "library",
+      "freq": 1833
+    },
+    "223": {
+      "name": "P",
+      "category": "type_param",
+      "freq": 1827
+    },
+    "224": {
+      "name": "vscode.ExtensionContext",
+      "category": "library",
+      "freq": 1826
+    },
+    "225": {
+      "name": "Server",
+      "category": "library",
+      "freq": 1819
+    },
+    "226": {
+      "name": "ReturnType",
+      "category": "utility",
+      "freq": 1818
+    },
+    "227": {
+      "name": "Wallet",
+      "category": "library",
+      "freq": 1808
+    },
+    "228": {
+      "name": "Assert",
+      "category": "library",
+      "freq": 1794
+    },
+    "229": {
+      "name": "Column",
+      "category": "library",
+      "freq": 1781
+    },
+    "230": {
+      "name": "ElementFinder",
+      "category": "library",
+      "freq": 1772
+    },
+    "231": {
+      "name": "History",
+      "category": "library",
+      "freq": 1761
+    },
+    "232": {
+      "name": "SinonStub",
+      "category": "library",
+      "freq": 1752
+    },
+    "233": {
+      "name": "d.BuildCtx",
+      "category": "library",
+      "freq": 1751
+    },
+    "234": {
+      "name": "Stats",
+      "category": "library",
+      "freq": 1732
+    },
+    "235": {
+      "name": "Property",
+      "category": "library",
+      "freq": 1729
+    },
+    "236": {
+      "name": "Window",
+      "category": "library",
+      "freq": 1726
+    },
+    "237": {
+      "name": "StateNavigator",
+      "category": "library",
+      "freq": 1726
+    },
+    "238": {
+      "name": "WritableDraft",
+      "category": "library",
+      "freq": 1722
+    },
+    "239": {
+      "name": "express.Request",
+      "category": "library",
+      "freq": 1721
+    },
+    "240": {
+      "name": "NgZone",
+      "category": "library",
+      "freq": 1719
+    },
+    "241": {
+      "name": "Blob",
+      "category": "library",
+      "freq": 1714
+    },
+    "242": {
+      "name": "Application",
+      "category": "library",
+      "freq": 1708
+    },
+    "243": {
+      "name": "ErrnoException",
+      "category": "library",
+      "freq": 1701
+    },
+    "244": {
+      "name": "vscode.TextDocument",
+      "category": "library",
+      "freq": 1694
+    },
+    "245": {
+      "name": "Params",
+      "category": "library",
+      "freq": 1677
+    },
+    "246": {
+      "name": "GfxDevice",
+      "category": "library",
+      "freq": 1667
+    },
+    "247": {
+      "name": "ForwardedRef",
+      "category": "library",
+      "freq": 1662
+    },
+    "248": {
+      "name": "C",
+      "category": "type_param",
+      "freq": 1648
+    },
+    "249": {
+      "name": "AxiosRequestConfig",
+      "category": "library",
+      "freq": 1646
+    },
+    "250": {
+      "name": "ImplicitAny",
+      "category": "instability",
+      "freq": 0
+    },
+    "251": {
+      "name": "ExplicitAny",
+      "category": "instability",
+      "freq": 0
+    },
+    "252": {
+      "name": "ErrorType",
+      "category": "instability",
+      "freq": 0
+    },
+    "253": {
+      "name": "Bottom",
+      "category": "instability",
+      "freq": 0
+    },
+    "254": {
+      "name": "unknown",
+      "category": "primitives",
+      "freq": 0
+    },
+    "255": {
+      "name": "never",
+      "category": "primitives",
+      "freq": 0
+    }
+  },
+  "type_to_id": {
+    "UNK": 0,
+    "any": 1,
+    "string": 2,
+    "number": 3,
+    "void": 4,
+    "array": 5,
+    "object": 6,
+    "Promise": 7,
+    "boolean": 8,
+    "Element": 9,
+    "__SerdeContext": 10,
+    "T": 11,
+    "Array": 12,
+    "Buffer": 13,
+    "Response": 14,
+    "HTMLElement": 15,
+    "Observable": 16,
+    "StyledComponent": 17,
+    "Record": 18,
+    "__HttpResponse": 19,
+    "__HttpHandlerOptions": 20,
+    "Map": 21,
+    "Partial": 22,
+    "Type": 23,
+    "Error": 24,
+    "Date": 25,
+    "Node": 26,
+    "RegExp": 27,
+    "React.FC": 28,
+    "Uint8Array": 29,
+    "Context": 30,
+    "Function": 31,
+    "Set": 32,
+    "Tensor": 33,
+    "BigNumber": 34,
+    "Event": 35,
+    "Request": 36,
+    "State": 37,
+    "MutableRefObject": 38,
+    "HTMLDivElement": 39,
+    "User": 40,
+    "FC": 41,
+    "Point": 42,
+    "Router": 43,
+    "MouseEvent": 44,
+    "IconData": 45,
+    "Tensor1D": 46,
+    "ComponentFixture": 47,
+    "Store": 48,
+    "GenericRetrier": 49,
+    "ExecutionContext": 50,
+    "Props": 51,
+    "Object": 52,
+    "Tensor2D": 53,
+    "RetryConfigurationDetails": 54,
+    "Vector3": 55,
+    "__HeaderBag": 56,
+    "Readonly": 57,
+    "PropsWithChildren": 58,
+    "Player": 59,
+    "Mock": 60,
+    "Position": 61,
+    "Logger": 62,
+    "RegExpMatchArray": 63,
+    "DoneFn": 64,
+    "Vector": 65,
+    "JSX.Element": 66,
+    "ThemedStyledProps": 67,
+    "Token": 68,
+    "K": 69,
+    "ElementRef": 70,
+    "TextDocument": 71,
+    "Client": 72,
+    "Options": 73,
+    "Entity": 74,
+    "Expression": 75,
+    "KeyboardEvent": 76,
+    "Message": 77,
+    "EntityProperty": 78,
+    "TerminalNode": 79,
+    "AsyncIterableIterator": 80,
+    "Float32Array": 81,
+    "Config": 82,
+    "Document": 83,
+    "Tensor3D": 84,
+    "SourceFile": 85,
+    "A": 86,
+    "Address": 87,
+    "RegExpExecArray": 88,
+    "Theme": 89,
+    "EntityMetadata": 90,
+    "FunctionComponent": 91,
+    "Symbol": 92,
+    "Done": 93,
+    "Action": 94,
+    "U": 95,
+    "Range": 96,
+    "Transaction": 97,
+    "ArrayBuffer": 98,
+    "bigint": 99,
+    "HTMLInputElement": 100,
+    "AxiosResponse": 101,
+    "ReadonlyArray": 102,
+    "Tensor4D": 103,
+    "Result": 104,
+    "Uri": 105,
+    "ClassNameMap": 106,
+    "React.FunctionComponent": 107,
+    "BN": 108,
+    "coreClient.CompositeMapper": 109,
+    "File": 110,
+    "Connection": 111,
+    "DebugElement": 112,
+    "Color": 113,
+    "SceneObjHolder": 114,
+    "CanvasRenderingContext2D": 115,
+    "URL": 116,
+    "d.Config": 117,
+    "Generator": 118,
+    "Repository": 119,
+    "Spy": 120,
+    "ChangeDetectorRef": 121,
+    "undefined": 122,
+    "PublicKey": 123,
+    "ReactWrapper": 124,
+    "DocumentNode": 125,
+    "ts.Node": 126,
+    "HttpClient": 127,
+    "Dispatch": 128,
+    "React.ChangeEvent": 129,
+    "Selection": 130,
+    "JQuery": 131,
+    "Stream": 132,
+    "Iterable": 133,
+    "Item": 134,
+    "HTMLCanvasElement": 135,
+    "Expr": 136,
+    "ReactElement": 137,
+    "CancellationToken": 138,
+    "ActivatedRoute": 139,
+    "Vector2": 140,
+    "Scope": 141,
+    "VNode": 142,
+    "AbiFunction": 143,
+    "NextFunction": 144,
+    "Region": 145,
+    "vec3": 146,
+    "Test": 147,
+    "Schema": 148,
+    "Value": 149,
+    "Path": 150,
+    "Subscription": 151,
+    "List": 152,
+    "ShallowWrapper": 153,
+    "React.MouseEvent": 154,
+    "Diagnostic": 155,
+    "Identifier": 156,
+    "ForwardRefExoticComponent": 157,
+    "null": 158,
+    "Location": 159,
+    "DoneCallback": 160,
+    "ClassType": 161,
+    "Filter": 162,
+    "Dictionary": 163,
+    "App": 164,
+    "Task": 165,
+    "ExpressionNode": 166,
+    "Routes": 167,
+    "Declaration": 168,
+    "Headers": 169,
+    "IconType": 170,
+    "Block": 171,
+    "Scalar": 172,
+    "Name": 173,
+    "TreeNode": 174,
+    "Component": 175,
+    "IconBaseProps": 176,
+    "Collection": 177,
+    "Platform": 178,
+    "SymbolicTensor": 179,
+    "TextEditor": 180,
+    "FormBuilder": 181,
+    "Model": 182,
+    "Pick": 183,
+    "MochaDone": 184,
+    "Query": 185,
+    "React.ReactNode": 186,
+    "TemplateResult": 187,
+    "vscode.Uri": 188,
+    "RootState": 189,
+    "React.ReactElement": 190,
+    "MemoizedSelector": 191,
+    "BigNumberish": 192,
+    "d.CompilerCtx": 193,
+    "DOMRect": 194,
+    "Callback": 195,
+    "Container": 196,
+    "Injector": 197,
+    "Ref": 198,
+    "HttpRequest": 199,
+    "Omit": 200,
+    "Account": 201,
+    "Disposable": 202,
+    "B": 203,
+    "Contract": 204,
+    "V": 205,
+    "Page": 206,
+    "NodeListOf": 207,
+    "R": 208,
+    "S": 209,
+    "ParseNode": 210,
+    "Transform": 211,
+    "Configuration": 212,
+    "Option": 213,
+    "AppState": 214,
+    "NodePath": 215,
+    "Project": 216,
+    "Term": 217,
+    "Command": 218,
+    "HTMLImageElement": 219,
+    "Parser": 220,
+    "WebGLRenderingContext": 221,
+    "Point3d": 222,
+    "P": 223,
+    "vscode.ExtensionContext": 224,
+    "Server": 225,
+    "ReturnType": 226,
+    "Wallet": 227,
+    "Assert": 228,
+    "Column": 229,
+    "ElementFinder": 230,
+    "History": 231,
+    "SinonStub": 232,
+    "d.BuildCtx": 233,
+    "Stats": 234,
+    "Property": 235,
+    "Window": 236,
+    "StateNavigator": 237,
+    "WritableDraft": 238,
+    "express.Request": 239,
+    "NgZone": 240,
+    "Blob": 241,
+    "Application": 242,
+    "ErrnoException": 243,
+    "vscode.TextDocument": 244,
+    "Params": 245,
+    "GfxDevice": 246,
+    "ForwardedRef": 247,
+    "C": 248,
+    "AxiosRequestConfig": 249,
+    "ImplicitAny": 250,
+    "ExplicitAny": 251,
+    "ErrorType": 252,
+    "Bottom": 253,
+    "unknown": 254,
+    "never": 255
+  },
+  "manytypes4ts_id_map": {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "7": 7,
+    "8": 8,
+    "9": 9,
+    "10": 10,
+    "11": 11,
+    "13": 12,
+    "12": 13,
+    "16": 14,
+    "15": 15,
+    "18": 16,
+    "14": 17,
+    "17": 18,
+    "21": 19,
+    "22": 20,
+    "19": 21,
+    "20": 22,
+    "23": 23,
+    "25": 24,
+    "26": 25,
+    "24": 26,
+    "27": 27,
+    "28": 28,
+    "29": 29,
+    "31": 30,
+    "33": 31,
+    "30": 32,
+    "34": 33,
+    "36": 34,
+    "37": 35,
+    "40": 36,
+    "38": 37,
+    "35": 38,
+    "39": 39,
+    "42": 40,
+    "45": 41,
+    "43": 42,
+    "55": 43,
+    "41": 44,
+    "47": 45,
+    "49": 46,
+    "57": 47,
+    "46": 48,
+    "50": 49,
+    "48": 50,
+    "32": 51,
+    "60": 52,
+    "52": 53,
+    "53": 54,
+    "56": 55,
+    "54": 56,
+    "51": 57,
+    "44": 58,
+    "78": 59,
+    "58": 60,
+    "65": 61,
+    "70": 62,
+    "63": 63,
+    "66": 64,
+    "75": 65,
+    "61": 66,
+    "62": 67,
+    "76": 68,
+    "68": 69,
+    "93": 70,
+    "79": 71,
+    "82": 72,
+    "74": 73,
+    "122": 74,
+    "71": 75,
+    "69": 76,
+    "99": 77,
+    "81": 78,
+    "134": 79,
+    "59": 80,
+    "84": 81,
+    "87": 82,
+    "91": 83,
+    "90": 84,
+    "77": 85,
+    "88": 86,
+    "121": 87,
+    "86": 88,
+    "73": 89,
+    "94": 90,
+    "85": 91,
+    "72": 92,
+    "101": 93,
+    "100": 94,
+    "89": 95,
+    "96": 96,
+    "98": 97,
+    "104": 98,
+    "102": 99,
+    "83": 100,
+    "92": 101,
+    "130": 102,
+    "109": 103,
+    "123": 104,
+    "117": 105,
+    "80": 106,
+    "97": 107,
+    "106": 108,
+    "118": 109,
+    "110": 110,
+    "116": 111,
+    "131": 112,
+    "107": 113,
+    "124": 114,
+    "115": 115,
+    "113": 116,
+    "129": 117,
+    "95": 118,
+    "112": 119,
+    "127": 120,
+    "170": 121,
+    "126": 122,
+    "120": 123,
+    "111": 124,
+    "132": 125,
+    "142": 126,
+    "160": 127,
+    "119": 128,
+    "105": 129,
+    "125": 130,
+    "137": 131,
+    "135": 132,
+    "114": 133,
+    "138": 134,
+    "139": 135,
+    "146": 136,
+    "108": 137,
+    "149": 138,
+    "179": 139,
+    "150": 140,
+    "145": 141,
+    "136": 142,
+    "152": 143,
+    "159": 144,
+    "143": 145,
+    "156": 146,
+    "161": 147,
+    "151": 148,
+    "147": 149,
+    "153": 150,
+    "157": 151,
+    "148": 152,
+    "144": 153,
+    "103": 154,
+    "155": 155,
+    "140": 156,
+    "128": 157,
+    "225": 158,
+    "163": 159,
+    "165": 160,
+    "172": 161,
+    "158": 162,
+    "168": 163,
+    "189": 164,
+    "167": 165,
+    "174": 166,
+    "209": 167,
+    "164": 168,
+    "184": 169,
+    "182": 170,
+    "173": 171,
+    "185": 172,
+    "162": 173,
+    "169": 174,
+    "178": 175,
+    "187": 176,
+    "177": 177,
+    "188": 178,
+    "190": 179,
+    "192": 180,
+    "220": 181,
+    "166": 182,
+    "141": 183,
+    "191": 184,
+    "186": 185,
+    "154": 186,
+    "205": 187,
+    "236": 188,
+    "181": 189,
+    "180": 190,
+    "210": 191,
+    "206": 192,
+    "200": 193,
+    "175": 194,
+    "250": 195,
+    "202": 196,
+    "219": 197,
+    "133": 198,
+    "211": 199,
+    "171": 200,
+    "196": 201,
+    "207": 202,
+    "204": 203,
+    "193": 204,
+    "215": 205,
+    "203": 206,
+    "199": 207,
+    "198": 208,
+    "208": 209,
+    "221": 210,
+    "218": 211,
+    "232": 212,
+    "183": 213,
+    "195": 214,
+    "224": 215,
+    "231": 216,
+    "229": 217,
+    "248": 218,
+    "227": 219,
+    "216": 220,
+    "249": 221,
+    "233": 222,
+    "213": 223,
+    "259": 224,
+    "234": 225,
+    "217": 226,
+    "240": 227,
+    "241": 228,
+    "228": 229,
+    "264": 230,
+    "222": 231,
+    "242": 232,
+    "245": 233,
+    "235": 234,
+    "238": 235,
+    "247": 236,
+    "214": 237,
+    "201": 238,
+    "260": 239,
+    "262": 240,
+    "239": 241,
+    "261": 242,
+    "243": 243,
+    "292": 244,
+    "226": 245,
+    "252": 246,
+    "197": 247,
+    "251": 248,
+    "270": 249
+  }
+}
