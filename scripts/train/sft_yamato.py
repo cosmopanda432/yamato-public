@@ -90,6 +90,8 @@ def parse_args() -> argparse.Namespace:
 
     # 量子化
     p.add_argument("--quantize", choices=["4bit", "8bit", "none"], default="4bit")
+    p.add_argument("--no-grad-checkpoint", action="store_true",
+                   help="gradient_checkpointing を OFF (VRAM が大きい場合に速度優先)")
 
     # ログ
     p.add_argument("--log-every", type=int, default=10)
@@ -176,8 +178,13 @@ def build_model(args: argparse.Namespace):
 
     backbone = AutoModelForCausalLM.from_pretrained(resolved, **load_kwargs)
 
-    # QLoRA 準備（prepare_model_for_kbit_training を使わずに gradient_checkpointing 直接設定）
-    backbone.gradient_checkpointing_enable()
+    # QLoRA 準備
+    if not args.no_grad_checkpoint:
+        backbone.gradient_checkpointing_enable()
+        logging.info("gradient_checkpointing: ON")
+    else:
+        logging.info("gradient_checkpointing: OFF (VRAM 優先 → 速度優先)")
+    # LoRA は frozen base layer に勾配を流すため input grads が必要
     if hasattr(backbone, "enable_input_require_grads"):
         backbone.enable_input_require_grads()
 

@@ -13,13 +13,15 @@ echo "=== yamatoLLM SFT (Qwen2.5-Coder-7B) ==="
 echo "GPU: ${GPU_NAME} (${VRAM_GB}GB VRAM)"
 
 if [ "$VRAM_GB" -ge 70 ]; then
-    # A100 80GB / H100 80GB
+    # A100 80GB / H100 80GB — 余裕があるので grad_checkpointing を切って高速化
     LORA_R=32
     BATCH=2
     GRAD_ACCUM=8
-    MAX_SEQ=2048
+    MAX_SEQ=1024
     QUANTIZE="4bit"
-    PROFILE="A100/H100 80GB (QLoRA r=32, batch=2, seq=2048)"
+    EXTRA_FLAGS="--no-grad-checkpoint"
+    MAX_STEPS=1500
+    PROFILE="A100/H100 80GB (QLoRA r=32, batch=2, seq=1024, no-grad-ckpt, max-steps=1500)"
 elif [ "$VRAM_GB" -ge 35 ]; then
     # A100 40GB / L40S
     LORA_R=32
@@ -27,6 +29,8 @@ elif [ "$VRAM_GB" -ge 35 ]; then
     GRAD_ACCUM=16
     MAX_SEQ=2048
     QUANTIZE="4bit"
+    EXTRA_FLAGS=""
+    MAX_STEPS=-1
     PROFILE="A100-40GB / L40S (QLoRA, r=32, batch=1, seq=2048)"
 elif [ "$VRAM_GB" -ge 20 ]; then
     # RTX 4090 / A5000 / 3090
@@ -35,6 +39,8 @@ elif [ "$VRAM_GB" -ge 20 ]; then
     GRAD_ACCUM=16
     MAX_SEQ=1536
     QUANTIZE="4bit"
+    EXTRA_FLAGS=""
+    MAX_STEPS=-1
     PROFILE="4090/A5000/3090 (QLoRA r=16, batch=1, seq=1536)"
 else
     # RTX 3060 12GB 等
@@ -43,6 +49,8 @@ else
     GRAD_ACCUM=8
     MAX_SEQ=512
     QUANTIZE="4bit"
+    EXTRA_FLAGS=""
+    MAX_STEPS=-1
     PROFILE="<20GB (QLoRA r=8, batch=1, seq=512)"
 fi
 
@@ -62,9 +70,11 @@ python3 -u scripts/train/sft_yamato.py \
     --grad-accum "${GRAD_ACCUM}" \
     --max-seq-length "${MAX_SEQ}" \
     --num-epochs 1 \
+    --max-steps "${MAX_STEPS}" \
     --learning-rate 2e-4 \
     --head-lr 1e-3 \
     --type-loss-weight 0.3 \
+    ${EXTRA_FLAGS} \
     --log-every 25 \
     --save-every 500 \
     2>&1
