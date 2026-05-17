@@ -213,7 +213,18 @@ def build_optimizer(args, lora_params, head_params):
 
 def main():
     args = parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # ログは stdout に出して flush を即時に (tee/nohup 越しでも見えるように)
+    import sys
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    root = logging.getLogger()
+    root.handlers = [handler]
+    root.setLevel(logging.INFO)
+    # stdout の line buffering を強制
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except AttributeError:
+        pass
 
     torch.manual_seed(args.seed)
 

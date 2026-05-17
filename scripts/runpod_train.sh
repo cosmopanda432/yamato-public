@@ -48,7 +48,7 @@ fi
 
 echo "Profile: ${PROFILE}"
 
-PYTORCH_ALLOC_CONF=expandable_segments:True python3 scripts/train/sft_yamato.py \
+PYTORCH_ALLOC_CONF=expandable_segments:True python3 -u scripts/train/sft_yamato.py \
     --train-parquet data/processed/sft/train.parquet \
     --val-parquet data/processed/sft/validation.parquet \
     --output-dir checkpoints/yamato_sft \
@@ -63,7 +63,8 @@ PYTORCH_ALLOC_CONF=expandable_segments:True python3 scripts/train/sft_yamato.py 
     --head-lr 1e-3 \
     --type-loss-weight 0.3 \
     --log-every 25 \
-    --save-every 500
+    --save-every 500 \
+    2>&1
 
 echo ""
 echo "=== 学習完了 ==="
