@@ -96,21 +96,22 @@ These thresholds are independently verifiable by anyone with the released checkp
 
 ---
 
-## Baseline (Qwen2.5-Coder-7B-Instruct, INT4, humaneval-ts)
+## Baseline (Qwen2.5-Coder-7B-Instruct, INT4)
 
 Measured 2026-05-17 on RTX 3060 12GB. Single sample per problem, temperature=0.2, top_p=0.95.
 
-| Metric | Value |
-|--------|-------|
-| MultiPL-E TS pass@1 (humaneval-ts, 159 problems) | **74.2%** (118/159) |
-| tsc --strict pass rate (prompt + completion) | **93.1%** (148/159) |
-| `any` usage rate | **0.0%** (0/159) |
-| Avg generation time | 4.4s/problem |
-| Avg test runtime | 0.2s/test |
+| Metric | humaneval-ts (159) | mbpp-ts (390) |
+|--------|-------------------:|---------------:|
+| **MultiPL-E TS pass@1** | **74.2%** (118/159) | **56.7%** (221/390) |
+| **tsc --strict pass rate** (prompt + completion) | **93.1%** (148/159) | **66.4%** (259/390) |
+| **`any` usage rate** | **0.0%** (0/159) | **0.0%** (0/390) |
+| Avg generation time | 4.4s/problem | 11.2s/problem |
 
-Top tsc-strict error codes when generation fails: TS2304 (Cannot find name), TS2349 (Expression not callable), TS2322 (Type mismatch), TS1160 (Unterminated literal).
+Top tsc-strict error codes on failures:
+- humaneval-ts: TS2304 (Cannot find name) ×5, TS1160 (Unterminated literal) ×3, TS2349 (Expression not callable) ×3, TS2322 (Type mismatch) ×2
+- mbpp-ts: TS1005 (Expected token) ×50, TS2349 (Expression not callable) ×50, TS1160 ×46, TS2304 ×46, TS1443 ×32 — many are partial-truncation syntax errors on longer problems
 
-Implication: tsc-strict and any-rate are near the ceiling on this baseline, so the headroom for yamato lies primarily in **pass@1** and **hallucination rate**.
+Implication: tsc-strict and any-rate are near the ceiling on humaneval-ts, so the headroom for yamato lies primarily in **pass@1** and **hallucination rate**. mbpp-ts has more headroom on tsc-strict.
 
 Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/eval/run_tests.py`. Aux metrics: `scripts/eval/aux_metrics.py`.
 
@@ -125,7 +126,7 @@ Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/e
 - [x] Data pipeline design ([DATA_DESIGN.md](DATA_DESIGN.md))
 - [x] TS type vocabulary built from ManyTypes4TypeScript (`config/ts_type_vocab.json`, 256 entries)
 - [x] tsc-strict / hallucination tooling (`scripts/ts_tools/`)
-- [x] Phase 1 baseline measurement (humaneval-ts pass@1 = 74.2%)
+- [x] Phase 1 baseline measurement (humaneval-ts pass@1 = 74.2%, mbpp-ts pass@1 = 56.7%)
 
 ### Next (Architecture migration)
 - [x] `yamato_config.py` — migrate to Qwen2.5-Coder-7B spec, drop legacy iwato refs
@@ -138,7 +139,7 @@ Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/e
 - [ ] Amenomihashira three-stage generation
 
 ### Phase milestones
-- [x] Phase 1: baseline measurement on Qwen2.5-Coder-7B (humaneval-ts done, mbpp-ts pending)
+- [x] Phase 1: baseline measurement on Qwen2.5-Coder-7B (humaneval-ts and mbpp-ts both done)
 - [ ] Phase 2: architecture integration
 - [ ] Phase 3: data pipeline implementation (TS Compiler API wrapper → labeled dataset)
 - [ ] Phase 4: QLoRA SFT on RunPod
