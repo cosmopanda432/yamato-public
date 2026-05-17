@@ -29,13 +29,40 @@ per-token 型ラベルを yamato_id にリマップした SFT 用 parquet を生
 from __future__ import annotations
 
 import argparse
+import functools
 import json
+import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 from transformers import AutoTokenizer
+
+# print に flush=True をデフォルト付与 (`nohup` や `tee` 越しでも進捗が見える)
+print = functools.partial(print, flush=True)
+
+
+SCHEMA = pa.schema([
+    pa.field("input_ids", pa.list_(pa.int64())),
+    pa.field("attention_mask", pa.list_(pa.int64())),
+    pa.field("labels", pa.list_(pa.int64())),
+    pa.field("type_labels", pa.list_(pa.int64())),
+    pa.field("n_type_labels", pa.int64()),
+    pa.field("n_tokens", pa.int64()),
+])
+
+
+def chunk_to_table(chunk: List[Dict]) -> pa.Table:
+    return pa.table({
+        "input_ids": [r["input_ids"] for r in chunk],
+        "attention_mask": [r["attention_mask"] for r in chunk],
+        "labels": [r["labels"] for r in chunk],
+        "type_labels": [r["type_labels"] for r in chunk],
+        "n_type_labels": [r["n_type_labels"] for r in chunk],
+        "n_tokens": [r["n_tokens"] for r in chunk],
+    }, schema=SCHEMA)
 
 
 def join_tokens_with_offsets(
@@ -134,6 +161,10 @@ def main():
     ap.add_argument("--model", default="models/Qwen2.5-Coder-7B-Instruct")
     ap.add_argument("--max-seq-len", type=int, default=1024)
     ap.add_argument("--limit", type=int, default=None, help="最大サンプル数 (パイロット用)")
+    ap.add_argument("--chunk-size", type=int, default=1000,
+                    help="parquet に flush する row 数 (大きすぎるとメモリ消費、小さすぎると IO 過多)")
+    ap.add_argument("--progress-every", type=int, default=2000,
+                    help="進捗ログを出力する処理済 row 数間隔")
     args = ap.parse_args()
 
     print(f"Loading vocab from {args.vocab}")
@@ -151,44 +182,77 @@ def main():
         raise SystemExit(f"No parquet files for split={args.split}")
     print(f"  {len(parquet_paths)} shards")
 
-    rows_out = []
-    total_in = 0
-    total_tokens = 0
-    total_type_labels = 0
-    for p in parquet_paths:
-        table = pq.read_table(p, columns=["id", "tokens", "labels"])
-        for s in table.to_pylist():
-            total_in += 1
-            if args.limit is not None and len(rows_out) >= args.limit:
-                break
-            enc = encode_sample(s, tokenizer, mt_id_to_yamato, args.max_seq_len)
-            if enc["n_type_labels"] == 0:
-                continue  # 学習に寄与しないサンプルは捨てる
-            rows_out.append(enc)
-            total_tokens += enc["n_tokens"]
-            total_type_labels += enc["n_type_labels"]
-        if args.limit is not None and len(rows_out) >= args.limit:
-            break
-
-    n_out = len(rows_out)
-    print(f"\nInput: {total_in} sequences")
-    print(f"Output: {n_out} sequences (dropped {total_in - n_out} with 0 labels)")
-    print(f"  avg tokens/seq:       {total_tokens / max(n_out, 1):.1f}")
-    print(f"  avg type_labels/seq:  {total_type_labels / max(n_out, 1):.1f}")
-    print(f"  label coverage:       {total_type_labels / max(total_tokens, 1) * 100:.2f}%")
-
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    table_out = pa.table({
-        "input_ids": [r["input_ids"] for r in rows_out],
-        "attention_mask": [r["attention_mask"] for r in rows_out],
-        "labels": [r["labels"] for r in rows_out],
-        "type_labels": [r["type_labels"] for r in rows_out],
-        "n_type_labels": [r["n_type_labels"] for r in rows_out],
-        "n_tokens": [r["n_tokens"] for r in rows_out],
-    })
-    pq.write_table(table_out, out_path)
-    print(f"\nWrote {out_path} ({n_out} rows)")
+    # 部分結果が残らないよう毎回新規作成 (再開したい場合は別ファイル名にする想定)
+    if out_path.exists():
+        print(f"  removing existing {out_path}")
+        out_path.unlink()
+
+    writer = pq.ParquetWriter(str(out_path), SCHEMA)
+
+    chunk: List[Dict] = []
+    total_in = 0
+    total_out = 0
+    total_tokens = 0
+    total_type_labels = 0
+    t_start = time.time()
+    t_last_log = t_start
+
+    try:
+        for shard_idx, p in enumerate(parquet_paths):
+            print(f"[shard {shard_idx + 1}/{len(parquet_paths)}] reading {p.name}")
+            # parquet を行グループ単位でストリーミング読み (メモリピーク削減)
+            pf = pq.ParquetFile(p)
+            for batch in pf.iter_batches(batch_size=1000, columns=["id", "tokens", "labels"]):
+                for s in batch.to_pylist():
+                    total_in += 1
+                    if args.limit is not None and total_out >= args.limit:
+                        break
+                    enc = encode_sample(s, tokenizer, mt_id_to_yamato, args.max_seq_len)
+                    if enc["n_type_labels"] == 0:
+                        continue  # 型ラベルゼロは学習に寄与しないので捨てる
+                    chunk.append(enc)
+                    total_out += 1
+                    total_tokens += enc["n_tokens"]
+                    total_type_labels += enc["n_type_labels"]
+
+                    if len(chunk) >= args.chunk_size:
+                        writer.write_table(chunk_to_table(chunk))
+                        chunk = []
+
+                    if total_out % args.progress_every == 0:
+                        el = time.time() - t_start
+                        delta = time.time() - t_last_log
+                        rate = args.progress_every / max(delta, 1e-6)
+                        print(
+                            f"  out={total_out:>7d} in={total_in:>7d} "
+                            f"avg_tok={total_tokens / total_out:.0f} "
+                            f"avg_lbl={total_type_labels / total_out:.1f} "
+                            f"rate={rate:.0f} rows/s elapsed={el:.0f}s"
+                        )
+                        t_last_log = time.time()
+
+                if args.limit is not None and total_out >= args.limit:
+                    break
+            if args.limit is not None and total_out >= args.limit:
+                break
+
+        # 残り flush
+        if chunk:
+            writer.write_table(chunk_to_table(chunk))
+    finally:
+        writer.close()
+
+    n_out = total_out
+    print()
+    print(f"Input:  {total_in} sequences")
+    print(f"Output: {n_out} sequences (dropped {total_in - n_out} with 0 labels)")
+    if n_out:
+        print(f"  avg tokens/seq:       {total_tokens / n_out:.1f}")
+        print(f"  avg type_labels/seq:  {total_type_labels / n_out:.1f}")
+        print(f"  label coverage:       {total_type_labels / max(total_tokens, 1) * 100:.2f}%")
+    print(f"Wrote {out_path} ({n_out} rows, {time.time() - t_start:.0f}s)")
 
 
 if __name__ == "__main__":
