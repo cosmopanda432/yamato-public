@@ -1,0 +1,16 @@
+{
+  "name": "yamato-ts-tools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript Compiler API helpers used to build hallucination negatives and tsc-strict labels for yamatoLLM",
+  "scripts": {
+    "build": "tsc",
+    "tsc-strict": "node dist/tsc_strict_runner.js",
+    "mutate": "node dist/mutate_for_hallucination.js"
+  },
+  "dependencies": {
+    "@types/node": "^25.8.0",
+    "ts-morph": "^28.0.0",
+    "typescript": "^5.9.3"
+  }
+}

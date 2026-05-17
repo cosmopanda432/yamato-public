@@ -16,3 +16,5 @@ __pycache__/
 /wandb/
 /external/
 /results/
+scripts/ts_tools/node_modules/
+scripts/ts_tools/dist/
