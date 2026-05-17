@@ -94,22 +94,32 @@ def parse_args() -> argparse.Namespace:
 
 
 class ParquetSFTDataset(Dataset):
-    def __init__(self, parquet_path: str, limit: int = None):
+    def __init__(self, parquet_path: str, limit: int = None, max_seq_length: int = None):
         table = pq.read_table(parquet_path)
         self.rows = table.to_pylist()
         if limit is not None:
             self.rows = self.rows[:limit]
+        self.max_seq_length = max_seq_length
 
     def __len__(self):
         return len(self.rows)
 
     def __getitem__(self, idx):
         r = self.rows[idx]
+        ids = r["input_ids"]
+        am = r["attention_mask"]
+        lb = r["labels"]
+        tl = r["type_labels"]
+        if self.max_seq_length is not None and len(ids) > self.max_seq_length:
+            ids = ids[: self.max_seq_length]
+            am = am[: self.max_seq_length]
+            lb = lb[: self.max_seq_length]
+            tl = tl[: self.max_seq_length]
         return {
-            "input_ids": torch.tensor(r["input_ids"], dtype=torch.long),
-            "attention_mask": torch.tensor(r["attention_mask"], dtype=torch.long),
-            "labels": torch.tensor(r["labels"], dtype=torch.long),
-            "type_labels": torch.tensor(r["type_labels"], dtype=torch.long),
+            "input_ids": torch.tensor(ids, dtype=torch.long),
+            "attention_mask": torch.tensor(am, dtype=torch.long),
+            "labels": torch.tensor(lb, dtype=torch.long),
+            "type_labels": torch.tensor(tl, dtype=torch.long),
         }
 
 
@@ -232,8 +242,11 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "args.json").write_text(json.dumps(vars(args), indent=2, default=str))
 
-    train_ds = ParquetSFTDataset(args.train_parquet, args.limit)
-    val_ds = ParquetSFTDataset(args.val_parquet) if args.val_parquet else None
+    train_ds = ParquetSFTDataset(args.train_parquet, args.limit, args.max_seq_length)
+    val_ds = (
+        ParquetSFTDataset(args.val_parquet, max_seq_length=args.max_seq_length)
+        if args.val_parquet else None
+    )
     logging.info("Train: %d samples", len(train_ds))
     if val_ds:
         logging.info("Val:   %d samples", len(val_ds))

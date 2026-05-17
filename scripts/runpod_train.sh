@@ -15,40 +15,42 @@ echo "GPU: ${GPU_NAME} (${VRAM_GB}GB VRAM)"
 if [ "$VRAM_GB" -ge 70 ]; then
     # A100 80GB / H100 80GB
     LORA_R=32
-    BATCH=4
-    GRAD_ACCUM=4
-    MAX_SEQ=2048
-    QUANTIZE="none"
-    PROFILE="A100/H100 高品質 (bf16 full, r=32, batch=4)"
-elif [ "$VRAM_GB" -ge 35 ]; then
-    # A100 40GB / L40S
-    LORA_R=32
     BATCH=2
     GRAD_ACCUM=8
     MAX_SEQ=2048
     QUANTIZE="4bit"
-    PROFILE="A100-40GB / L40S (QLoRA, r=32, batch=2)"
+    PROFILE="A100/H100 80GB (QLoRA r=32, batch=2, seq=2048)"
+elif [ "$VRAM_GB" -ge 35 ]; then
+    # A100 40GB / L40S
+    LORA_R=32
+    BATCH=1
+    GRAD_ACCUM=16
+    MAX_SEQ=2048
+    QUANTIZE="4bit"
+    PROFILE="A100-40GB / L40S (QLoRA, r=32, batch=1, seq=2048)"
 elif [ "$VRAM_GB" -ge 20 ]; then
     # RTX 4090 / A5000 / 3090
     LORA_R=16
     BATCH=1
     GRAD_ACCUM=16
-    MAX_SEQ=2048
+    MAX_SEQ=1536
     QUANTIZE="4bit"
-    PROFILE="4090/A5000/3090 (QLoRA, r=16, batch=1)"
+    PROFILE="4090/A5000/3090 (QLoRA r=16, batch=1, seq=1536)"
 else
     # RTX 3060 12GB 等
     LORA_R=8
     BATCH=1
     GRAD_ACCUM=8
-    MAX_SEQ=1024
+    MAX_SEQ=512
     QUANTIZE="4bit"
-    PROFILE="<20GB (QLoRA, r=8, batch=1, seq=1024)"
+    PROFILE="<20GB (QLoRA r=8, batch=1, seq=512)"
 fi
 
 echo "Profile: ${PROFILE}"
 
-PYTORCH_ALLOC_CONF=expandable_segments:True python3 -u scripts/train/sft_yamato.py \
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+PYTORCH_ALLOC_CONF=expandable_segments:True \
+python3 -u scripts/train/sft_yamato.py \
     --train-parquet data/processed/sft/train.parquet \
     --val-parquet data/processed/sft/validation.parquet \
     --output-dir checkpoints/yamato_sft \
