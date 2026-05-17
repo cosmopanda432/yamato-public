@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import Dict, List
@@ -48,6 +49,11 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+# Python は実行スクリプトのあるディレクトリを sys.path[0] にする (CWD は入らない)
+# ので repo root を明示的に追加して `kojiki_lm` を import 可能にする。
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 PAD_LABEL = -100
 
 

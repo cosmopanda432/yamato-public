@@ -48,6 +48,7 @@ fi
 
 echo "Profile: ${PROFILE}"
 
+PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}" \
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
 PYTORCH_ALLOC_CONF=expandable_segments:True \
 python3 -u scripts/train/sft_yamato.py \
