@@ -1,18 +1,21 @@
 """
-yamatoLLM SFT — Qwen2.5-Coder-7B + LoRA + TsukuyomiTypeHead + BonpuConfidence。
+yamatoLLM SFT — Qwen2.5-Coder-7B (frozen) + TsukuyomiTypeHead + BonpuConfidence。
+
+backbone は完全 freeze。型予測ヘッドのみを学習する (Julia 設計に忠実)。
+backbone の CLM loss は計算しない (バックボーンを触らないため)。
 
 入力:
     data/processed/sft/*.parquet
       列: input_ids, attention_mask, labels, type_labels
 
 損失:
-    base_loss (Qwen の CLM)
-  + type_head.loss_weight * type_loss  (TsukuyomiTypeHead, ManyTypes4TS 由来 labels)
-  + 0.3 * conf_loss (BonpuConfidence, ダミー 1.0 で安定化のみ)
+    type_loss_weight * type_loss  (TsukuyomiTypeHead, ManyTypes4TS 由来 labels)
+  + conf_loss_weight * conf_loss   (BonpuConfidence, ダミー 1.0 で安定化のみ)
+
+base_loss (Qwen CLM) は計算するがログ用途のみ、backward しない。
 
 出力:
     checkpoints/yamato_sft/
-        lora_adapter/          # PEFT LoRA adapter
         custom_heads.pt         # type_head + confidence state_dict
         training_log.json
         config.json             # 学習設定スナップショット
@@ -29,8 +32,7 @@ yamatoLLM SFT — Qwen2.5-Coder-7B + LoRA + TsukuyomiTypeHead + BonpuConfidence�
     python3 scripts/train/sft_yamato.py \
         --train-parquet data/processed/sft/train.parquet \
         --output-dir checkpoints/yamato_sft_full \
-        --num-epochs 1 --batch-size 4 --grad-accum 4 --max-seq-length 2048 \
-        --lora-r 32
+        --num-epochs 1 --batch-size 4 --grad-accum 4 --max-seq-length 2048
 """
 
 from __future__ import annotations
@@ -73,25 +75,17 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--max-steps", type=int, default=-1)
     p.add_argument("--batch-size", type=int, default=1)
     p.add_argument("--grad-accum", type=int, default=8)
-    p.add_argument("--learning-rate", type=float, default=2e-4)
     p.add_argument("--head-lr", type=float, default=1e-3)
     p.add_argument("--warmup-ratio", type=float, default=0.05)
     p.add_argument("--weight-decay", type=float, default=0.01)
     p.add_argument("--grad-clip", type=float, default=1.0)
 
-    # LoRA
-    p.add_argument("--lora-r", type=int, default=8)
-    p.add_argument("--lora-alpha", type=int, default=16)
-    p.add_argument("--lora-target-modules", nargs="+", default=["q_proj", "v_proj", "gate_proj"])
-
-    # 損失
-    p.add_argument("--type-loss-weight", type=float, default=0.3)
+    # 損失 (base CLM は backward しない。type と conf のみ)
+    p.add_argument("--type-loss-weight", type=float, default=1.0)
     p.add_argument("--conf-loss-weight", type=float, default=0.3)
 
-    # 量子化
+    # 量子化 (backbone は freeze なので 4bit でも問題なし)
     p.add_argument("--quantize", choices=["4bit", "8bit", "none"], default="4bit")
-    p.add_argument("--no-grad-checkpoint", action="store_true",
-                   help="gradient_checkpointing を OFF (VRAM が大きい場合に速度優先)")
 
     # ログ
     p.add_argument("--log-every", type=int, default=10)
@@ -150,14 +144,13 @@ def collate(batch: List[Dict], pad_id: int) -> Dict[str, torch.Tensor]:
 
 def build_model(args: argparse.Namespace):
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-    from peft import get_peft_model, LoraConfig, TaskType
 
     from kojiki_lm.yamato_config import YamatoConfig
     from kojiki_lm.yamato_model import YamatoLLM
     from kojiki_lm.qwen_adapter import QwenAdapter
 
     resolved = QwenAdapter.resolve_model_path(args.model_name)
-    logging.info("Loading backbone: %s (quantize=%s)", resolved, args.quantize)
+    logging.info("Loading backbone: %s (quantize=%s, FROZEN)", resolved, args.quantize)
 
     tokenizer = AutoTokenizer.from_pretrained(resolved, trust_remote_code=True)
     if tokenizer.pad_token is None:
@@ -178,27 +171,10 @@ def build_model(args: argparse.Namespace):
 
     backbone = AutoModelForCausalLM.from_pretrained(resolved, **load_kwargs)
 
-    # QLoRA 準備
-    if not args.no_grad_checkpoint:
-        backbone.gradient_checkpointing_enable()
-        logging.info("gradient_checkpointing: ON")
-    else:
-        logging.info("gradient_checkpointing: OFF (VRAM 優先 → 速度優先)")
-    # LoRA は frozen base layer に勾配を流すため input grads が必要
-    if hasattr(backbone, "enable_input_require_grads"):
-        backbone.enable_input_require_grads()
-
-    # LoRA 注入
-    lora_cfg = LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
-        r=args.lora_r,
-        lora_alpha=args.lora_alpha,
-        lora_dropout=0.05,
-        target_modules=args.lora_target_modules,
-        bias="none",
-    )
-    backbone = get_peft_model(backbone, lora_cfg)
-    backbone.print_trainable_parameters()
+    # backbone 完全 freeze (LoRA も入れない)
+    for p in backbone.parameters():
+        p.requires_grad = False
+    backbone.eval()
 
     yamato_config = YamatoConfig()
     yamato_config.backbone.model_name = args.model_name
@@ -207,30 +183,22 @@ def build_model(args: argparse.Namespace):
     model = YamatoLLM(backbone=backbone, tokenizer=tokenizer, config=yamato_config)
     model.init_custom_heads()
 
-    lora_params = [p for n, p in backbone.named_parameters() if p.requires_grad]
     head_params = list(model.custom_heads.parameters())
-    n_lora = sum(p.numel() for p in lora_params)
     n_head = sum(p.numel() for p in head_params)
-    logging.info(
-        "Trainable: LoRA %.2fM + Heads %.2fM = %.2fM",
-        n_lora / 1e6, n_head / 1e6, (n_lora + n_head) / 1e6,
-    )
+    logging.info("Trainable: Heads only %.2fM (backbone frozen)", n_head / 1e6)
 
-    return model, lora_params, head_params, tokenizer
+    return model, head_params, tokenizer
 
 
-def build_optimizer(args, lora_params, head_params):
-    groups = [
-        {"params": lora_params, "lr": args.learning_rate},
-        {"params": head_params, "lr": args.head_lr},
-    ]
+def build_optimizer(args, head_params):
+    groups = [{"params": head_params, "lr": args.head_lr}]
     try:
         import bitsandbytes as bnb
         opt = bnb.optim.PagedAdamW(groups, weight_decay=args.weight_decay)
-        logging.info("Optimizer: bitsandbytes PagedAdamW")
+        logging.info("Optimizer: bitsandbytes PagedAdamW (heads only)")
     except (ImportError, AttributeError):
         opt = torch.optim.AdamW(groups, weight_decay=args.weight_decay)
-        logging.info("Optimizer: torch AdamW")
+        logging.info("Optimizer: torch AdamW (heads only)")
     return opt
 
 
@@ -264,7 +232,7 @@ def main():
     if val_ds:
         logging.info("Val:   %d samples", len(val_ds))
 
-    model, lora_params, head_params, tokenizer = build_model(args)
+    model, head_params, tokenizer = build_model(args)
 
     if args.dry_run:
         logging.info("Dry-run mode: skip training")
@@ -286,7 +254,7 @@ def main():
     if args.max_steps > 0:
         total_update_steps = min(total_update_steps, args.max_steps)
 
-    optimizer = build_optimizer(args, lora_params, head_params)
+    optimizer = build_optimizer(args, head_params)
 
     # 線形 warmup + cosine decay
     from torch.optim.lr_scheduler import LambdaLR
@@ -300,13 +268,12 @@ def main():
     scheduler = LambdaLR(optimizer, lr_lambda)
 
     log_entries: List[Dict] = []
-    model.backbone.train()
+    model.backbone.eval()  # backbone は freeze、dropout 等を OFF
     model.custom_heads.train()
 
     total_step = 0  # update step (after grad accum)
     micro_step = 0
     accum_total = 0.0
-    accum_base = 0.0
     accum_type = 0.0
     accum_conf = 0.0
     accum_count = 0
@@ -326,27 +293,37 @@ def main():
             bsz = input_ids.size(0)
             conf_labels = torch.ones(bsz, dtype=torch.float, device=device)
 
+            # backbone は freeze、勾配は heads にのみ流れる。
+            # base_loss はログ用に計算するが backward しない (labels=None)。
             with torch.autocast("cuda", dtype=torch.bfloat16):
                 out = model.forward(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
-                    labels=labels,
+                    labels=None,  # CLM loss を計算しない (backbone 不変なので無意味)
                     type_labels=type_labels,
                     confidence_labels=conf_labels,
                 )
 
-            loss = out["loss"] / args.grad_accum
+            type_loss_t = out.get("type_loss", None)
+            conf_loss_t = out.get("confidence_loss", None)
+            loss_terms = []
+            if type_loss_t is not None:
+                loss_terms.append(args.type_loss_weight * type_loss_t)
+            if conf_loss_t is not None:
+                loss_terms.append(args.conf_loss_weight * conf_loss_t)
+            if not loss_terms:
+                raise RuntimeError("No trainable loss (type/conf) returned by model.forward")
+            loss = sum(loss_terms) / args.grad_accum
             loss.backward()
 
-            accum_total += out["loss"].item()
-            accum_base += out["base_loss"].item() if torch.is_tensor(out["base_loss"]) else 0.0
-            accum_type += out.get("type_loss", torch.tensor(0.0)).item() if "type_loss" in out else 0.0
-            accum_conf += out.get("confidence_loss", torch.tensor(0.0)).item() if "confidence_loss" in out else 0.0
+            accum_total += sum(t.item() for t in loss_terms)
+            accum_type += type_loss_t.item() if type_loss_t is not None else 0.0
+            accum_conf += conf_loss_t.item() if conf_loss_t is not None else 0.0
             accum_count += 1
             micro_step += 1
 
             if micro_step % args.grad_accum == 0:
-                torch.nn.utils.clip_grad_norm_(lora_params + head_params, args.grad_clip)
+                torch.nn.utils.clip_grad_norm_(head_params, args.grad_clip)
                 optimizer.step()
                 scheduler.step()
                 optimizer.zero_grad()
@@ -359,22 +336,20 @@ def main():
                         "step": total_step,
                         "epoch": epoch,
                         "loss": accum_total / accum_count,
-                        "base_loss": accum_base / accum_count,
                         "type_loss": accum_type / accum_count,
                         "conf_loss": accum_conf / accum_count,
-                        "lr_lora": scheduler.get_last_lr()[0],
-                        "lr_head": scheduler.get_last_lr()[1],
+                        "lr_head": scheduler.get_last_lr()[0],
                         "micro_step": micro_step,
                         "elapsed_sec": el,
                         "samples_per_sec": rate,
                     }
                     log_entries.append(entry)
                     logging.info(
-                        "step=%d total=%.4f base=%.4f type=%.4f conf=%.4f lr_lora=%.2e samples/s=%.2f",
-                        total_step, entry["loss"], entry["base_loss"], entry["type_loss"],
-                        entry["conf_loss"], entry["lr_lora"], entry["samples_per_sec"],
+                        "step=%d total=%.4f type=%.4f conf=%.4f lr_head=%.2e samples/s=%.2f",
+                        total_step, entry["loss"], entry["type_loss"],
+                        entry["conf_loss"], entry["lr_head"], entry["samples_per_sec"],
                     )
-                    accum_total = accum_base = accum_type = accum_conf = 0.0
+                    accum_total = accum_type = accum_conf = 0.0
                     accum_count = 0
                     t_start = time.time()
 
@@ -394,9 +369,7 @@ def save_checkpoint(out_dir: Path, model, log_entries, args, step: int, final: b
     sub = out_dir / tag
     sub.mkdir(parents=True, exist_ok=True)
 
-    # LoRA adapter
-    model.backbone.save_pretrained(sub / "lora_adapter")
-    # カスタムヘッド
+    # カスタムヘッドのみ保存 (backbone は freeze のため保存不要)
     torch.save(model.custom_heads.state_dict(), sub / "custom_heads.pt")
     # ログ
     (sub / "training_log.json").write_text(json.dumps(log_entries, indent=2))
