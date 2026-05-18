@@ -152,12 +152,32 @@ Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/e
 
 ### yamatoLLM 4-Stage progress
 - [x] **Stage 1 (国譲り)**: weight inheritance (Qwen2.5-Coder-7B-Instruct) + random custom-head init
-- [⏳] **Stage 2 (天孫降臨)**: QLoRA SFT pilot done on RTX 3060 (type_loss 6.22 → 2.37 over 20 steps / 100 samples). Full run pending on RunPod
-- [ ] **Stage 3 (禊・三貴子)**: 3-layer specialization SFT (iwato 天照 / kojiki 月読 / kenpou 須佐之男) — not started
+- [x] **Stage 2 (天孫降臨)**: QLoRA SFT done on RunPod A6000, step_2000. TypeHead top-1 = 70.1% / top-5 = 91.0% on 200 samples. Win Condition **not met** — see [Stage 2 results](#stage-2-results-step_2000-vs-baseline) below
+- [ ] **Stage 3 (禊・三貴子)**: 3-layer specialization SFT (iwato 天照 / kojiki 月読 / kenpou 須佐之男) — next
 - [ ] **Stage 4 (神武東征)**: DPO alignment for hallucination suppression — not started
 
+### Stage 2 results (step_2000 vs baseline)
+
+humaneval-ts (159):
+
+| Metric | Baseline | step_2000 | Δ | vs Win Condition |
+|--------|---------:|----------:|--:|:---:|
+| pass@1 | 74.21% | 74.84% | +0.63pt | ✅ within ±1pt |
+| tsc strict | 93.08% | 91.19% | -1.89pt | ❌ +5pt target not met, regressed |
+| any rate | 0.0% | 0.0% | ±0 | ✅ maintained |
+
+mbpp-ts (390):
+
+| Metric | Baseline | step_2000 | Δ | vs Win Condition |
+|--------|---------:|----------:|--:|:---:|
+| pass@1 | 56.67% | 54.62% | -2.05pt | ❌ regressed, outside ±1pt |
+
+Conclusion: TypeHead trained (top-1 70.1%) but the auxiliary type-prediction signal did not transfer to generation quality. Generation regressed slightly on tsc-strict and mbpp pass@1. Stage 3 / Stage 4 needed before release decision.
+
+Source files: `data/eval/results/humaneval-ts-yamato-step2000/{_summary,_aux_metrics}.json`, `data/eval/results/mbpp-ts-yamato-step2000/{_summary,_aux_metrics}.json`, `data/eval/type_head/step_2000.json`.
+
 ### Outstanding tasks
-- [ ] Data pipeline implementation (TS Compiler API wrapper → labeled dataset)
-- [ ] Stage 2 full QLoRA SFT on RunPod
-- [ ] Stage 3 / Stage 4 dataset construction
-- [ ] Evaluation vs baseline, release decision
+- [ ] Stage 3 禊・三貴子 dataset + training script (next)
+- [ ] Stage 4 神武東征 DPO dataset + training script
+- [ ] Re-evaluation after Stage 3 / Stage 4
+- [ ] Release decision
