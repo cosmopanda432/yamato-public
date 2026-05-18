@@ -96,22 +96,33 @@ def parse_args() -> argparse.Namespace:
 
 
 class ParquetSFTDataset(Dataset):
+    """
+    pyarrow Table を columnar のまま保持し、__getitem__ で必要な行だけ Python に
+    変換する。`to_pylist()` で全件 Python list 化すると 30万行クラスの
+    train.parquet で RAM 数十GBを使い切るため。
+    """
+
     def __init__(self, parquet_path: str, limit: int = None, max_seq_length: int = None):
         table = pq.read_table(parquet_path)
-        self.rows = table.to_pylist()
         if limit is not None:
-            self.rows = self.rows[:limit]
+            table = table.slice(0, limit)
+        # column ごとに pyarrow ChunkedArray のまま保持
+        self._input_ids = table.column("input_ids")
+        self._attention_mask = table.column("attention_mask")
+        self._labels = table.column("labels")
+        self._type_labels = table.column("type_labels")
+        self._n_rows = table.num_rows
         self.max_seq_length = max_seq_length
 
     def __len__(self):
-        return len(self.rows)
+        return self._n_rows
 
     def __getitem__(self, idx):
-        r = self.rows[idx]
-        ids = r["input_ids"]
-        am = r["attention_mask"]
-        lb = r["labels"]
-        tl = r["type_labels"]
+        # ChunkedArray[idx].as_py() で 1 行だけ Python list に変換
+        ids = self._input_ids[idx].as_py()
+        am = self._attention_mask[idx].as_py()
+        lb = self._labels[idx].as_py()
+        tl = self._type_labels[idx].as_py()
         if self.max_seq_length is not None and len(ids) > self.max_seq_length:
             ids = ids[: self.max_seq_length]
             am = am[: self.max_seq_length]
