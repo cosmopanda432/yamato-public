@@ -4,11 +4,8 @@ Qwen2.5-Coder-7B-Instruct を yamatoLLM の backbone として組み込むアダ
 提供する操作:
   1. load_base_model:    Qwen2 のロード（INT4/INT8/FP オプション）
   2. inject_lora:        LoRA アダプタの注入
-  3. attach_custom_heads: yamatoLLM 固有ヘッド（BonpuConfidence ほか）の追加
+  3. attach_custom_heads: yamatoLLM 固有ヘッド（TsukuyomiTypeHead, BonpuConfidence）の追加
   4. load_checkpoint:    保存済みチェックポイントからの復元
-
-将来追加する型予測まわりのヘッド (TsukuyomiTypeHead / HirukoDetector /
-AmenomihashiraProtocol) はここに append していく。
 """
 
 import logging

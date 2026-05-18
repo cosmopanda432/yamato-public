@@ -1,12 +1,8 @@
 """
 yamatoLLM — Qwen2.5-Coder-7B-Instruct + 型予測カスタムヘッド
 
-TypeScript の型予測とハルシネーション制御を行うため、
-Qwen2 backbone に追加ヘッドを attach できる骨格を提供する。
-
-現時点で attach 済みなのは BonpuConfidence のみ。
-TsukuyomiTypeHead / HirukoDetector / AmenomihashiraProtocol は
-後続フェーズで `custom_heads` に追加していく。
+TypeScript の型予測を行うため、Qwen2 backbone に追加ヘッドを attach する。
+attach 済みヘッド: TsukuyomiTypeHead (月読), BonpuConfidence (凡夫)。
 """
 
 import logging
@@ -52,9 +48,8 @@ class YamatoLLM(nn.Module):
     構成:
         backbone:      Qwen2.5-Coder-7B-Instruct (LoRA 適用可)
         custom_heads:  ModuleDict
+            - type_head:  TsukuyomiTypeHead
             - confidence: BonpuConfidence
-            - (将来) type_head: TsukuyomiTypeHead
-            - (将来) hiruko_detector: HirukoDetector
     """
 
     def __init__(
@@ -179,59 +174,6 @@ class YamatoLLM(nn.Module):
 
         result["loss"] = total_loss
         return result
-
-    @torch.no_grad()
-    def generate(
-        self,
-        prompt: str,
-        max_new_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
-        top_p: Optional[float] = None,
-        **kwargs,
-    ) -> YamatoOutput:
-        """
-        推論時のエントリポイント
-
-        backbone.generate で素直に生成し、生成後の hidden states から
-        信頼度を計算する。
-        """
-        inference_config = self.config.inference
-        max_new_tokens = max_new_tokens or inference_config.max_new_tokens
-        temperature = temperature or inference_config.temperature
-        top_p = top_p or inference_config.top_p
-
-        output = YamatoOutput()
-
-        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True)
-        device = next(self.backbone.parameters()).device
-        input_ids = inputs["input_ids"].to(device)
-        attention_mask = inputs["attention_mask"].to(device)
-
-        generated_ids = self.backbone.generate(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            do_sample=inference_config.do_sample,
-            pad_token_id=self.tokenizer.pad_token_id,
-        )
-
-        new_ids = generated_ids[0, input_ids.shape[1]:]
-        output.text = self.tokenizer.decode(new_ids, skip_special_tokens=True)
-        output.generated_ids = generated_ids
-
-        if self.custom_heads is not None:
-            gen_hidden = self.get_hidden_states(generated_ids)
-            conf_out = self.custom_heads["confidence"](gen_hidden)
-            output.confidence = conf_out["confidence"].item()
-            output.uncertainty_flag = bool(conf_out["uncertainty_flag"].item())
-            output.truthfulness = conf_out["truthfulness"].item()
-            # 月読: 生成系列全体の TS 型予測
-            type_out = self.custom_heads["type_head"](gen_hidden)
-            output.type_predictions = type_out["type_preds"]
-
-        return output
 
     @classmethod
     def from_pretrained(

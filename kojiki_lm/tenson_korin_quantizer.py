@@ -50,7 +50,7 @@ class TensonKorinConfig:
     pruning_method: str = "magnitude"    # "magnitude" or "structured"
     protected_modules: List[str] = field(default_factory=lambda: [
         "confidence",
-        # 実装後に "type_head", "hiruko_detector" を追加する
+        "type_head",
     ])
 
     # 八咫鏡: キャリブレーション設定

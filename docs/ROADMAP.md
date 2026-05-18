@@ -7,7 +7,7 @@
 ## Strategy
 
 We do **not** aim to beat the absolute state of the art (Copilot, GPT-4, Qwen2.5-Coder-32B, etc.).
-We aim to show that adding **type prediction + hallucination control** on top of a fixed, publicly available baseline (Qwen2.5-Coder-7B) produces a measurable improvement on type-related metrics — without regression on general code-generation quality.
+We aim to show that adding **per-token type prediction (SFT) + hallucination-suppressing preference optimization (DPO)** on top of a fixed, publicly available baseline (Qwen2.5-Coder-7B) produces a measurable improvement on type-related metrics — without regression on general code-generation quality.
 
 This makes the result **reproducible and uncontroversial**: anyone can run the baseline and the trained model and verify the gap.
 
@@ -25,49 +25,61 @@ This makes the result **reproducible and uncontroversial**: anyone can run the b
 
 ## Architecture
 
-Three components added on top of the frozen Qwen2.5-Coder backbone (LoRA-trained):
+Two components added on top of the Qwen2.5-Coder backbone (LoRA-trained):
 
 | Component | Role | Inspired by |
 |-----------|------|-------------|
-| **TsukuyomiTypeHead** | Per-token type prediction that constrains the next-token distribution toward type-consistent tokens | 月読命 |
-| **Hiruko Detector** | Post-generation malformed-output detector; triggers retry when the output's type distribution is degenerate | 蛭子（不具の子） |
-| **Amenomihashira Protocol** | Three-stage structured generation: type definitions → function signatures → implementations | 天の御柱 |
+| **TsukuyomiTypeHead** | Per-token TS-type prediction trained as an auxiliary objective during SFT | 月読命 |
+| **BonpuConfidence** | Uncertainty score so the model can refuse / warn when type safety cannot be guaranteed | 凡夫の自覚 |
 
-A small **BonpuConfidence** head produces an uncertainty score so the model can refuse / warn when type safety cannot be guaranteed.
+Hallucination suppression is handled at training time via DPO (Stage 4 神武東征) — not via inference-time wall detectors. See the dropped-items note in [Status](#status).
 
 ---
 
-## Phases
+## Pipeline (yamatoLLM 4-Stage)
 
-### Phase 1 — Baseline & Setup
-- Load Qwen2.5-Coder-7B-Instruct, run baseline on the evaluation suite
-- Establish reference scores: MultiPL-E TS pass@1, tsc strict pass rate, hallucination rate, `any` rate
+Primary reference: `~/yamatoLLM/yamatoLLM/docs/yamatoLLM_training_pipeline.md`.
+
+### Stage 1 — 国譲り (Kuniyuzuri / weight inheritance)
+- Load Qwen2.5-Coder-7B-Instruct, attach randomly initialized custom heads (TsukuyomiTypeHead, BonpuConfidence)
+- No training cost; establishes the `yamato_base` checkpoint
+- Baseline evaluation: MultiPL-E TS pass@1, tsc strict pass rate, hallucination rate, `any` rate
 - INT4 inference on RTX 3060 via TensonKorinQuantizer
 
-### Phase 2 — Architecture Integration
-- Attach TsukuyomiTypeHead, Hiruko detector, BonpuConfidence to the frozen backbone
-- TypeScript type vocabulary (primitives + utility types + common library types)
-- Forward / generate path covering the Amenomihashira three-stage protocol
-
-### Phase 3 — Data
-See [DATA_DESIGN.md](DATA_DESIGN.md) for the full pipeline design.
-
-Three datasets are built in parallel:
-- **A. Typed TS corpus** — The Stack v2 TS subset, filtered for genuine `.ts` files with explicit type annotations
-- **B. Token-level type labels** — extracted via the TypeScript Compiler API in a Node subprocess; mapped to a ~200–400 entry type vocabulary including instability markers (`ImplicitAny`, `ExplicitAny`, `ErrorType`)
-- **C. Hallucination negatives** — synthesized by mutating compiling code (fake methods, wrong arg counts, fabricated imports) and keeping only those that actually fail `tsc`
-
-Target sizes: 50–100k SFT files, 30–50k token-type labeled samples, 20–50k hallucination pairs.
-
-### Phase 4 — SFT
+### Stage 2 — 天孫降臨 (Tenson Korin / general SFT)
 - QLoRA on the backbone (LoRA target: q_proj, v_proj, gate_proj)
-- Auxiliary losses for TsukuyomiTypeHead and BonpuConfidence
+- Auxiliary loss for TsukuyomiTypeHead (CE on TS type labels) + BonpuConfidence
 - Training environment: RunPod (A100 / H100)
+- Data: see [Stage data section](#stage-data) below
 
-### Phase 5 — Evaluation & Release
+### Stage 3 — 禊・三貴子 (Misogi / per-layer specialization SFT)
+- Layer-specialized SFT after the Stage 2 LoRA is merged or stacked
+- Three sub-routines for the three traits: language understanding (天照), code generation (月読), governance (須佐之男)
+- Each receives a smaller, domain-specific dataset (~2–5k samples)
+
+### Stage 4 — 神武東征 (Jinmu Tosei / DPO alignment)
+- Direct Preference Optimization with chosen / rejected pairs
+- Negative samples: synthesized by mutating compiling code (fake methods, wrong arg counts, fabricated imports) and keeping only those that actually fail `tsc`
+- This is where hallucination suppression happens (replaces the dropped v2.1 Hiruko detector)
+
+### Final — Evaluation & Release
 - Compare yamatoLLM vs Qwen2.5-Coder-7B baseline on the metrics below
 - If the win condition is met: release weights + write-up
-- Otherwise: iterate on data and architecture
+- Otherwise: iterate on data and stage parameters
+
+---
+
+## Stage data
+
+See [DATA_DESIGN.md](DATA_DESIGN.md) for the full pipeline design.
+
+| Dataset | Stage that uses it | Source |
+|---------|-------------------|--------|
+| **A. Typed TS corpus** | Stage 2 (SFT base) | The Stack v2 TS subset, filtered for genuine `.ts` files with explicit type annotations |
+| **B. Token-level type labels** | Stage 2 (TsukuyomiTypeHead aux loss) | TypeScript Compiler API → ~200–400 entry vocabulary incl. `ImplicitAny`/`ExplicitAny`/`ErrorType` |
+| **C. Hallucination negatives** | Stage 4 (DPO rejected) | Code mutation + `tsc --strict` failure filtering |
+
+Target sizes: 50–100k SFT files, 30–50k token-type labeled samples, 20–50k hallucination pairs.
 
 ---
 
@@ -126,22 +138,26 @@ Generation script: `scripts/eval/generate_multipl_e.py`. Test runner: `scripts/e
 - [x] Data pipeline design ([DATA_DESIGN.md](DATA_DESIGN.md))
 - [x] TS type vocabulary built from ManyTypes4TypeScript (`config/ts_type_vocab.json`, 256 entries)
 - [x] tsc-strict / hallucination tooling (`scripts/ts_tools/`)
-- [x] Phase 1 baseline measurement (humaneval-ts pass@1 = 74.2%, mbpp-ts pass@1 = 56.7%)
+- [x] Stage 1 baseline measurement (humaneval-ts pass@1 = 74.2%, mbpp-ts pass@1 = 56.7%)
 
-### Next (Architecture migration)
+### Migration cleanup
 - [x] `yamato_config.py` — migrate to Qwen2.5-Coder-7B spec, drop legacy iwato refs
 - [x] `yamato_model.py` — clean up legacy refs, align with Qwen2 API
 - [x] `qwen_adapter.py` — default model name Qwen2.5-Coder-7B, remove iwato imports
 - [x] `tenson_korin_quantizer.py` — default model name Qwen2.5-Coder-7B
 - [x] TypeScript type vocabulary (`config/ts_type_vocab.json`)
 - [x] TsukuyomiTypeHead (TS-adapted port of Julia-no-Mikoto's type head)
-- [x] Hiruko Detector for TypeScript
-- [x] Amenomihashira three-stage generation
+- [x] ~~Hiruko Detector for TypeScript~~ — dropped (v2.1 Amenomihashira protocol abandoned 2026-05-18; 0/549 firings on humaneval-ts/mbpp-ts)
+- [x] ~~Amenomihashira three-stage generation~~ — dropped (same reason)
 
-### Phase milestones
-- [x] Phase 1: baseline measurement on Qwen2.5-Coder-7B (humaneval-ts and mbpp-ts both done)
-- [x] Phase 2: architecture integration (TsukuyomiTypeHead 1.97M + HirukoDetector + AmenomihashiraProtocol attached to YamatoLLM)
-- [⏳] Phase 4: SFT pilot done on RTX 3060 (type_loss 6.22 → 2.37 over 20 update steps on 100 samples). Full run pending on RunPod.
-- [ ] Phase 3: data pipeline implementation (TS Compiler API wrapper → labeled dataset)
-- [ ] Phase 4: QLoRA SFT on RunPod
-- [ ] Phase 5: evaluation vs baseline, release decision
+### yamatoLLM 4-Stage progress
+- [x] **Stage 1 (国譲り)**: weight inheritance (Qwen2.5-Coder-7B-Instruct) + random custom-head init
+- [⏳] **Stage 2 (天孫降臨)**: QLoRA SFT pilot done on RTX 3060 (type_loss 6.22 → 2.37 over 20 steps / 100 samples). Full run pending on RunPod
+- [ ] **Stage 3 (禊・三貴子)**: 3-layer specialization SFT (iwato 天照 / kojiki 月読 / kenpou 須佐之男) — not started
+- [ ] **Stage 4 (神武東征)**: DPO alignment for hallucination suppression — not started
+
+### Outstanding tasks
+- [ ] Data pipeline implementation (TS Compiler API wrapper → labeled dataset)
+- [ ] Stage 2 full QLoRA SFT on RunPod
+- [ ] Stage 3 / Stage 4 dataset construction
+- [ ] Evaluation vs baseline, release decision

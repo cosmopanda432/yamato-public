@@ -204,22 +204,23 @@ Julia版の重み (v2 値) をそのまま TS版に持ってくる:
 | 凡夫の自覚 (confidence) | `kojiki_lm/kenpou/bonpu_confidence.py` | 完了 |
 | 統合モデル骨格 | `kojiki_lm/yamato_model.py` | 完了 (最小構成) |
 | TS型語彙 | `config/ts_type_vocab.json` | **未着手** |
-| TsukuyomiTypeHead (月読) | `kojiki_lm/yomi/tsukuyomi_type_head.py` (予定) | **未着手** |
-| HirukoDetector (ヒルコ) | `kojiki_lm/yomi/hiruko_detector.py` (予定) | **未着手** |
-| AmenomihashiraProtocol (天の御柱) | `kojiki_lm/misogi/amenomihashira.py` (予定) | **未着手** |
+| TsukuyomiTypeHead (月読) | `kojiki_lm/yomi/tsukuyomi_type_head.py` | 完了 |
 | Role-based Attention | (実装方針未定) | **未着手** |
-| TS Compiler API ラッパー | `scripts/extract_ts_types/` (予定) | **未着手** |
+| TS Compiler API ラッパー | `scripts/ts_tools/` | 完了 |
 
 ---
 
-## v1 vs v2 vs v2.1 (Julia版) の TS 版での扱い
+## v1 vs v2 (Julia版) の TS 版での扱い
 
-Julia版が積み重ねた変更履歴 (v1→v2→v2.1) は、TS版では **最初から v2.1 相当** を出発点とする。
-従って:
-- 型語彙: 最初から **Hash Embedding 込み**
-- 月読: 最初から **学習・推論両方で中核**
-- Multiple Dispatch: 最初から **Role-based Masking**
-- 天の御柱: 最初から **3段階ステートマシン + ヒルコ検知 + 直毘神**
+Julia版 v2.1 で導入された天の御柱 (Amenomihashira) / ヒルコ検知 / 直毘神は **TS 版では採用しない**。
+理由: Qwen 事前学習済み backbone に type_ids 入力経路を後付けできず、Hiruko 検知器が
+ハルシネーションに対して発火しない (humaneval-ts / mbpp-ts で 0/549) ことが pilot で判明。
+ハルシネーション抑制は yamatoLLM 4-Stage の Stage 4 神武東征 (DPO) で扱う。
+
+TS 版での出発点:
+- 型語彙: TS 標準型 + ユーザー定義型カテゴリ + 特殊型 (`config/ts_type_vocab.json`, 256 件)
+- 月読 (TsukuyomiTypeHead): per-token 型予測ヘッドとして output 側に配置
+- 凡夫 (BonpuConfidence): 信頼度スコアヘッド
 
 ---
 

@@ -16,7 +16,7 @@
 | **A'** | TS instruct ペア | **既存利用可（要注意）** | `mhhmm/typescript-instruct-20k-v2c` (GPT-3.5生成、蒸留懸念あり) |
 | **A''** | DefinitelyTyped（real-API語彙） | **要取得（git clone）** | `DefinitelyTyped/DefinitelyTyped` |
 | **B** | per-token 型ラベル（TsukuyomiTypeHead 学習） | **既存利用可（大発見）** | `kevinjesse/ManyTypes4TypeScript` |
-| **C** | ハルシネーション負例（HirukoDetector 学習） | **自作必要** | コード変異 + `tsc --strict` 検証 |
+| **C** | ハルシネーション負例（Stage 4 DPO 神武東征の rejected サンプル） | **自作必要** | コード変異 + `tsc --strict` 検証 |
 | **D** | tsc strict pass/fail ラベル（評価） | **自作必要** | A の各ファイルを strict で再コンパイル |
 | **E** | 評価セット（MultiPL-E TS） | **既存利用可** | `nuprl/MultiPL-E` (humaneval-ts 159, mbpp-ts 390) |
 

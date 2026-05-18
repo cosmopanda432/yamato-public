@@ -79,10 +79,10 @@ Mutations:
 3. Swap argument types
 4. Add fabricated imports
 
-Each mutated sample is verified by running `tsc` — only kept if it actually fails compilation. This guarantees a true negative.
+Each mutated sample is verified by running `tsc` — only kept if it actually fails compilation. This guarantees a true negative. These negatives feed Stage 4 (神武東征 / DPO) as `rejected` samples.
 
 ```python
-def corrupt_for_hiruko(code: str) -> list[CorruptExample]:
+def corrupt_for_hallucination(code: str) -> list[CorruptExample]:
     candidates = [
         replace_method_call(code, fake_method=True),
         mutate_arg_count(code),
@@ -100,7 +100,7 @@ def corrupt_for_hiruko(code: str) -> list[CorruptExample]:
 |---------|-------|-----|
 | Typed TS files | 50k–100k | SFT |
 | Token-type labeled samples | 30k–50k | TsukuyomiTypeHead |
-| Hallucination positive/negative pairs | 20k–50k | Hiruko Detector |
+| Hallucination positive/negative pairs | 20k–50k | Stage 4 DPO (神武東征) |
 | `tsc --strict` pass/fail pairs | ~10k | Final evaluation |
 
 Sufficient for LoRA SFT on an 8B base.

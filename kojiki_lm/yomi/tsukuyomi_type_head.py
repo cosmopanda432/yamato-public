@@ -8,9 +8,8 @@ Qwen2.5-Coder backbone の hidden_states を受け取り、
     type_logits  [B, L, V]  に対し、ManyTypes4TypeScript 由来の
     type_labels  [B, L]     で CrossEntropy。
 
-推論時 (Autoregressive Type Prediction):
-    各ステップで token + type を同時に進める。
-    HirukoDetector がこの logits 分布から型不安定を検知する。
+推論時:
+    各トークン位置の TS 型ラベルを出力（per-token 型予測）。
 """
 
 from __future__ import annotations

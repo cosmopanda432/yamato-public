@@ -41,7 +41,7 @@ interface MutationRecord {
 }
 
 const FAKE_METHOD_SUFFIXES = ["AndCheck", "Sync2", "Fast", "X", "_unsafe"];
-const FAKE_IMPORT_NAMES = ["__yamatoFakeApi", "__nonExistentSymbol", "__hirukoBait"];
+const FAKE_IMPORT_NAMES = ["__yamatoFakeApi", "__nonExistentSymbol", "__halluBait"];
 const FAKE_IMPORT_MODULES = ["lodash", "fs/promises", "events"];
 
 function pickPosition(sf: SourceFile, node: Node) {

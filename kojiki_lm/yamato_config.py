@@ -2,8 +2,7 @@
 yamatoLLM 統合設定
 
 Qwen2.5-Coder-7B-Instruct backbone に、TypeScript 型予測のカスタムヘッド
-（TsukuyomiTypeHead, HirukoDetector, BonpuConfidence など）を載せる
-構成の設定を統合管理する。
+（TsukuyomiTypeHead, BonpuConfidence など）を載せる構成の設定を統合管理する。
 """
 
 from dataclasses import dataclass, field
